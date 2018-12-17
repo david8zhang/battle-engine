@@ -52,16 +52,16 @@ export class TurnManager implements ITurnManager {
     const arenaEffects : IAbstractTurn[] = this.arenaManager.getHazards();
     const activePlayerHeroEffects = this.teamManager.getActivePlayerHero().getEffects();
     const activeEnemyHeroEffects = this.teamManager.getActiveEnemyHero().getEffects();
-    this.turnQueue.enqueueTurns(arenaEffects);
-    this.turnQueue.enqueueTurns(activeEnemyHeroEffects);
-    this.turnQueue.enqueueTurns(activePlayerHeroEffects);
+    if (arenaEffects.length > 0) this.turnQueue.enqueueTurns(arenaEffects);
+    if (activeEnemyHeroEffects.length > 0) this.turnQueue.enqueueTurns(activeEnemyHeroEffects);
+    if (activePlayerHeroEffects.length > 0) this.turnQueue.enqueueTurns(activePlayerHeroEffects);
     let actionLog : string[] = [];
     while (this.turnQueue.size() > 0) {
       const turnToProcess = this.turnQueue.dequeueTurn();
       const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
       actionLog = actionLog.concat(actions);
     }
-    return actionLog;
+    return actionLog.filter((action) => action !== null);
   }
 
   public addPlayerTurn(playerInput : LooseObject) {
@@ -70,4 +70,13 @@ export class TurnManager implements ITurnManager {
     this.turnQueue.enqueueTurn(action);
   }
 
+
+/** <-------------------------- JUST FOR DEBUGGING! --------------------------> **/
+  public _getTurnQueue() {
+    return this.turnQueue;
+  }
+
+  public _setTurnQueue(turnQueue : TurnQueue) {
+    this.turnQueue = turnQueue;
+  }
 }

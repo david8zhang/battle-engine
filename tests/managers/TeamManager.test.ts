@@ -63,7 +63,8 @@ describe('Team Manager', () => {
       expect(enemyTeam).to.deep.equal(sampleEnemyHeroes);
     })
     it('generates a random hero set if one is provided and one is not', () => {
-      delete sampleConfig['playerGenerator']
+      const newConfig = { ...sampleConfig }
+      delete newConfig['playerGenerator'];
       const teamManager = new TeamManager(sampleConfig);
       const playerTeam : LooseObject = teamManager.getPlayerTeam();
       const enemyTeam : LooseObject = teamManager.getEnemyTeam();

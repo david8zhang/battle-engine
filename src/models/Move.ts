@@ -26,9 +26,9 @@ export class Move {
     this.name = name;
   }
 
-  public calculateDamage(sourceHero : Hero, targetHero : Hero) {
+  public calculateDamage(sourceHero : Hero, targetHero : Hero) : number {
     let damage = (((this.power * sourceHero.getAttack() / targetHero.getDefense()) / 50) + 2)
     if (damage > targetHero.getHealth()) damage = targetHero.getHealth();
-    return damage;
+    return Math.floor(damage);
   }
 }

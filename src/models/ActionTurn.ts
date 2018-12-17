@@ -17,7 +17,7 @@ export class ActionTurn implements IAbstractTurn {
   constructor(config : LooseObject) {
     if (config.move) this.move = new Move(config.move);
     if (config.targetHeroIds) this.targetHeroIds = config.targetHeroIds;
-    if (config.sourceHeroIds) this.sourceHeroId = config.sourceHeroId;
+    if (config.sourceHeroId) this.sourceHeroId = config.sourceHeroId;
     if (config.priority) this.priority = config.priority;
   }
 
@@ -26,8 +26,9 @@ export class ActionTurn implements IAbstractTurn {
     const enemyTeam = teamManager.getEnemyTeam();
     const actionLogs : string[] = [];
     let sourceHero : Hero;
+
     if (playerTeam[this.sourceHeroId] !== undefined) sourceHero = playerTeam[this.sourceHeroId]
-    else if (enemyTeam[this.sourceHeroId] !== undefined) sourceHero = playerTeam[this.sourceHeroId];
+    else if (enemyTeam[this.sourceHeroId] !== undefined) sourceHero = enemyTeam[this.sourceHeroId];
 
     // If the source hero is dead or nonexistent, they can't attack, so just skip this action
     if (!sourceHero || sourceHero.getHealth() === 0) {
