@@ -15,15 +15,46 @@ const TurnFactory : LooseObject = {
 
 export class TurnQueue {
   private queue : IAbstractTurn[];
-  constructor() {
+  private teamManager : ITeamManager;
+  constructor(teamManager : ITeamManager) {
+    this.teamManager = teamManager;
     this.queue = [];
   }
+
+  private showError(msg: string, turn : LooseObject) {
+    console.error(msg, turn);
+  }
+
+  private calculateSpeedPriority(a : LooseObject, b : LooseObject) : number {
+    const heroA = this.teamManager.getHero(a.sourceHeroId);
+    const heroB = this.teamManager.getHero(b.sourceHeroId);
+    if (!heroA) {
+      this.showError('Error, turn has invalid source hero id!', a);
+    } else if (!heroB) {
+      this.showError('Error, turn has invalid source hero id', b);
+    }
+    return heroB.getSpeed() - heroA.getSpeed();
+  }
+
   public enqueueTurn(turn : IAbstractTurn) {
-    const newQueue = this.queue.concat(turn).sort((a, b) => a.priority - b.priority);
+    const newQueue = this.queue.concat(turn).sort((a : LooseObject, b : LooseObject) => {
+      if (a.priority === b.priority && (a.sourceHeroId && b.sourceHeroId)) {
+        return this.calculateSpeedPriority(a, b);
+      } else {
+        return a.priority - b.priority;
+      }
+    });
     this.queue = newQueue;
   }
+
   public enqueueTurns(turnArray : IAbstractTurn[]) {
-    const newQueue = this.queue.concat(turnArray).sort((a, b) => a.priority - b.priority);
+    const newQueue = this.queue.concat(turnArray).sort((a : LooseObject, b : LooseObject) => {
+      if (a.priority === b.priority && (a.sourceHeroId && b.sourceHeroId)) {
+        return this.calculateSpeedPriority(a, b);
+      } else {
+        return a.priority - b.priority;
+      }
+    });
     this.queue = newQueue;
   }
   public dequeueTurn() : IAbstractTurn {
@@ -45,16 +76,16 @@ export class TurnManager implements ITurnManager {
   constructor(teamManager : ITeamManager, arenaManager : IArenaManager) {
     this.teamManager = teamManager;
     this.arenaManager = arenaManager;
-    this.turnQueue = new TurnQueue();
+    this.turnQueue = new TurnQueue(teamManager);
   }
 
+  /**
+   * Process the turn queue and return a log of what happened
+   * (to show to the UI)
+   */
   public processTurnQueue() : string[] {
-    const arenaEffects : IAbstractTurn[] = this.arenaManager.getHazards();
-    const activePlayerHeroEffects = this.teamManager.getActivePlayerHero().getEffects();
-    const activeEnemyHeroEffects = this.teamManager.getActiveEnemyHero().getEffects();
-    if (arenaEffects.length > 0) this.turnQueue.enqueueTurns(arenaEffects);
-    if (activeEnemyHeroEffects.length > 0) this.turnQueue.enqueueTurns(activeEnemyHeroEffects);
-    if (activePlayerHeroEffects.length > 0) this.turnQueue.enqueueTurns(activePlayerHeroEffects);
+    this.addEffectsToQueue();
+
     let actionLog : string[] = [];
     while (this.turnQueue.size() > 0) {
       const turnToProcess = this.turnQueue.dequeueTurn();
@@ -64,6 +95,33 @@ export class TurnManager implements ITurnManager {
     return actionLog.filter((action) => action !== null);
   }
 
+  /**
+   * Add effects to the queue as turns (like environmental hazards, etc.)
+   */
+  private addEffectsToQueue() : void {
+    const arenaEffects : IAbstractTurn[] = this.arenaManager
+                                              .getHazards()
+                                              .filter((effect : EffectTurn) => effect.duration > 0);
+
+    const activePlayerHeroEffects = this.teamManager
+                                        .getActivePlayerHero()
+                                        .getEffects()
+                                        .filter((effect : EffectTurn) => effect.duration > 0);
+    const activeEnemyHeroEffects = this.teamManager
+                                        .getActiveEnemyHero()
+                                        .getEffects()
+                                        .filter((effect : EffectTurn) => effect.duration > 0);
+
+    if (arenaEffects.length > 0) this.turnQueue.enqueueTurns(arenaEffects);
+    if (activeEnemyHeroEffects.length > 0) this.turnQueue.enqueueTurns(activeEnemyHeroEffects);
+    if (activePlayerHeroEffects.length > 0) this.turnQueue.enqueueTurns(activePlayerHeroEffects);
+  }
+
+
+  /**
+   * addPlayerTurn - add a new turn inputted by the player
+   * @param playerInput Object that contains turn properties
+   */
   public addPlayerTurn(playerInput : LooseObject) {
     const actionType : string = playerInput.actionType;
     const action : IAbstractTurn = new TurnFactory[actionType](playerInput);

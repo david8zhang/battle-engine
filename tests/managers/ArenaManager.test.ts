@@ -8,7 +8,9 @@ import { LooseObject } from '../../src/interface/LooseObject';
 
 describe('Arena Manager', () => {
   it('converts a set of hazards if provided', () => {
-    const arenaManager = new ArenaManager(sampleConfig);
+    const configCopy = { ...sampleConfig };
+    configCopy.hazards = sampleHazards
+    const arenaManager = new ArenaManager(configCopy);
     expect(arenaManager.getHazards()).to.deep.equal(sampleHazards);
   })
   it('adds hazard Loose Objects correctly', () => {

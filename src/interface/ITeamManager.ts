@@ -6,4 +6,5 @@ export interface ITeamManager {
   getEnemyTeam() : LooseObject
   getActivePlayerHero()  : Hero;
   getActiveEnemyHero() : Hero;
+  getHero(id : string) : Hero;
 }

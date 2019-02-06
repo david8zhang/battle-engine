@@ -33,14 +33,11 @@ export class TeamManager implements ITeamManager {
   private enemyTeam : LooseObject;
 
   constructor(battleConfig : LooseObject) {
-    this.playerGenerator = randomGenerator;
-    this.enemyGenerator = randomGenerator;
-
-    if (battleConfig.playerGenerator) this.playerGenerator = battleConfig.playerGenerator;
-    if (battleConfig.enemyGenerator) this.enemyGenerator = battleConfig.enemyGenerator;
+    if (battleConfig.playerTeam) this.playerTeam = this.convertToHeroes(battleConfig.playerTeam);
+    if (battleConfig.enemyTeam) this.enemyTeam = this.convertToHeroes(battleConfig.enemyTeam);
    
-    this.playerTeam = this.playerGenerator();
-    this.enemyTeam = this.enemyGenerator();
+    if (!this.playerTeam) this.playerTeam = randomGenerator();
+    if (!this.enemyTeam) this.enemyTeam = randomGenerator();
 
     this.activePlayerHero = battleConfig.activePlayerHero || Object.keys(this.playerTeam)[0];
     this.activeEnemyHero = battleConfig.activeEnemyHero || Object.keys(this.enemyTeam)[0];
@@ -60,5 +57,25 @@ export class TeamManager implements ITeamManager {
 
   public getActiveEnemyHero() : Hero {
     return this.enemyTeam[this.activeEnemyHero];
+  }
+
+  public getHero(id : string) : Hero {
+    if (this.enemyTeam[id]) {
+      return this.enemyTeam[id];
+    } else if (this.playerTeam[id]) {
+      return this.playerTeam[id];
+    }
+    return null;
+  }
+
+  private convertToHeroes(team : LooseObject) : LooseObject {
+    if (!team) {
+      return {};
+    }
+    const result : LooseObject = {};
+    Object.keys(team).forEach((k : string) => {
+      result[k] = new Hero(team[k]);
+    })
+    return result;
   }
 }

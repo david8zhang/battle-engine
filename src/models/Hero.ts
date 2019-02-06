@@ -9,6 +9,7 @@ export class Hero {
   private name : string = 'name';
   private attack : number = 0;
   private defense : number = 0;
+  private speed: number = 0;
   private health : number = 0;
   private effects : IAbstractTurn[] = [];
 
@@ -17,6 +18,7 @@ export class Hero {
     if (config.heroId) this.heroId = config.heroId;
     if (config.attack) this.attack = config.attack;
     if (config.defense) this.defense = config.defense;
+    if (config.speed) this.speed = config.speed;
     if (config.health) this.health = config.health;
     if (config.effects) this.effects = config.effects;
   }
@@ -51,6 +53,14 @@ export class Hero {
 
   public setHealth(health : number) : void {
     this.health = health
+  }
+
+  public getSpeed() : number {
+    return this.speed;
+  }
+
+  public setSpeed(speed : number) : void {
+    this.speed = speed;
   }
 
   public getHeroId() : string {
