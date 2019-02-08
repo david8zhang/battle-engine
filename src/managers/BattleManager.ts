@@ -9,16 +9,20 @@ import { ITurnManager } from "../interface/ITurnManager";
 import { TeamManager } from "./TeamManager";
 import { ArenaManager } from './ArenaManager';
 import { TurnManager } from "./TurnManager";
+import { CPUManager } from "./CPUManager";
+import { ICPUManager } from "../interface/ICPUManager";
 
 export class BattleManager implements IBattleManager {
   private teamManager : ITeamManager;
   private arenaManager : IArenaManager;
   private turnManager : ITurnManager;
+  private cpuManager : ICPUManager;
 
   constructor(battleConfig : LooseObject) {
     this.teamManager = new TeamManager(battleConfig);
     this.arenaManager = new ArenaManager(battleConfig);
-    this.turnManager = new TurnManager(this.teamManager, this.arenaManager);
+    this.cpuManager = new CPUManager(battleConfig);
+    this.turnManager = new TurnManager(this.teamManager, this.arenaManager, this.cpuManager);
   }
 
   public doPlayerTurn(playerInput : LooseObject) {

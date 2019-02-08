@@ -21,6 +21,21 @@ export class ActionTurn implements IAbstractTurn {
     if (config.priority) this.priority = config.priority;
   }
 
+  // Debugging only
+  public _getMove() : Move {
+    return this.move;
+  }
+
+  // Debugging only
+  public _getTargetHeroIds() : string[] {
+    return this.targetHeroIds;
+  }
+
+  // Debugging only
+  public _getSourceHeroId() : string {
+    return this.sourceHeroId;
+  }
+
   public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : string[] {
     const playerTeam = teamManager.getPlayerTeam();
     const enemyTeam = teamManager.getEnemyTeam();

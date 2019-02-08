@@ -7,10 +7,13 @@ import { IAbstractTurn } from "../interface/IAbstractTurn";
 /** Models */
 import { EffectTurn } from '../models/EffectTurn';
 import { ActionTurn } from '../models/ActionTurn';
+import { SwitchTurn } from '../models/SwitchTurn';
+import { ICPUManager } from "../interface/ICPUManager";
 
 const TurnFactory : LooseObject = {
   ActionTurn,
-  EffectTurn
+  EffectTurn,
+  SwitchTurn
 }
 
 export class TurnQueue {
@@ -69,13 +72,15 @@ export class TurnQueue {
 }
 
 export class TurnManager implements ITurnManager {
-  private teamManager : ITeamManager
-  private arenaManager : IArenaManager
+  private teamManager : ITeamManager;
+  private arenaManager : IArenaManager;
+  private cpuManager : ICPUManager;
   private turnQueue : TurnQueue;
 
-  constructor(teamManager : ITeamManager, arenaManager : IArenaManager) {
+  constructor(teamManager : ITeamManager, arenaManager : IArenaManager, cpuManager : ICPUManager) {
     this.teamManager = teamManager;
     this.arenaManager = arenaManager;
+    this.cpuManager = cpuManager;
     this.turnQueue = new TurnQueue(teamManager);
   }
 
@@ -85,6 +90,9 @@ export class TurnManager implements ITurnManager {
    */
   public processTurnQueue() : string[] {
     this.addEffectsToQueue();
+    if (this.cpuManager) {
+      this.addCPUTurn();
+    }
 
     let actionLog : string[] = [];
     while (this.turnQueue.size() > 0) {
@@ -126,6 +134,14 @@ export class TurnManager implements ITurnManager {
     const actionType : string = playerInput.actionType;
     const action : IAbstractTurn = new TurnFactory[actionType](playerInput);
     this.turnQueue.enqueueTurn(action);
+  }
+
+  /**
+   * addCPUTurn - add a new turn calculated by the CPU
+   */
+  public addCPUTurn() {
+    const cpuTurn : IAbstractTurn = this.cpuManager.getCPUTurn(this.arenaManager, this.teamManager);
+    this.turnQueue.enqueueTurn(cpuTurn);
   }
 
 

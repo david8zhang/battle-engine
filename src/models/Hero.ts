@@ -1,6 +1,7 @@
 import { IAbstractTurn } from "../interface/IAbstractTurn";
 import { EffectTurn } from "./EffectTurn";
 import { LooseObject } from "../interface/LooseObject";
+import { Move } from "./Move";
 
 const uuidV4 = require('uuid/v4');
 
@@ -12,6 +13,7 @@ export class Hero {
   private speed: number = 0;
   private health : number = 0;
   private effects : IAbstractTurn[] = [];
+  private moveSet : Move[] = [];
 
   constructor(config : LooseObject) {
     if (config.name) this.name = config.name;
@@ -20,7 +22,8 @@ export class Hero {
     if (config.defense) this.defense = config.defense;
     if (config.speed) this.speed = config.speed;
     if (config.health) this.health = config.health;
-    if (config.effects) this.effects = config.effects;
+    if (config.effects) this.effects = config.effects.map((effect : LooseObject) => new EffectTurn(effect));
+    if (config.moveSet) this.moveSet = config.moveSet.map((move : LooseObject) => new Move(move));
   }
 
   public getName() : string {
@@ -75,15 +78,28 @@ export class Hero {
     return this.effects;
   }
 
+  public getMoveSet() : Move[] {
+    return this.moveSet;
+  }
+
+  public setMoveSet(moves : LooseObject[]) : void {
+    const newMoveSet : Move[] = [];
+    moves.forEach((m : LooseObject) => {
+      newMoveSet.push(new Move(m));
+    })
+    this.moveSet = newMoveSet;
+  }
+
   public setEffects(effects : IAbstractTurn[]) {
     this.effects = effects;
   }
 
   public generateHeroObject(rawObject : LooseObject) : void {
-    this.health = rawObject.health;
-    this.attack = rawObject.attack;
-    this.defense = rawObject.defense;
-    this.name = rawObject.name;
+    this.setHealth(rawObject.health);
+    this.setAttack(rawObject.attack);
+    this.setDefense(rawObject.defense);
+    this.setName(rawObject.name);
+    this.setMoveSet(rawObject.moveSet);
 
     if (rawObject.heroId) {
       this.heroId = rawObject.heroId

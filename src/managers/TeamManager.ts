@@ -17,7 +17,17 @@ const randomGenerator = function () : LooseObject {
       defense: Math.floor(Math.random() * 10),
       health: Math.floor(Math.random() * 100) + 50,
       name: `Robo Hero ${i}`,
-      heroId
+      heroId,
+      moveSet: [{
+        power: 10,
+        name: 'Tackle'
+      }, {
+        power: 20,
+        name: 'Flail'
+      }, {
+        power: 50,
+        name: 'Hyper Beam'
+      }]
     });
     heroes[heroId] = newHero;
   }
@@ -25,8 +35,6 @@ const randomGenerator = function () : LooseObject {
 }
 
 export class TeamManager implements ITeamManager {
-  private playerGenerator : Function;
-  private enemyGenerator : Function;
   private activePlayerHero : string;
   private activeEnemyHero : string;
   private playerTeam : LooseObject;
@@ -57,6 +65,14 @@ export class TeamManager implements ITeamManager {
 
   public getActiveEnemyHero() : Hero {
     return this.enemyTeam[this.activeEnemyHero];
+  }
+
+  public setActivePlayerHero(newActiveHeroId : string) : void {
+    this.activePlayerHero = newActiveHeroId;
+  }
+
+  public setActiveEnemyHero(newActiveHeroId : string) : void {
+    this.activeEnemyHero = newActiveHeroId;
   }
 
   public getHero(id : string) : Hero {

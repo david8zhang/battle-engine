@@ -58,7 +58,7 @@ describe('Turn Manager', () => {
     it ('adds turns correctly', () => {
       const teamManager = new TeamManager(sampleConfig);
       const arenaManager = new ArenaManager(sampleConfig);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
       turnManager.addPlayerTurn(singleHitPlayerAction)
       const turnQueue : TurnQueue = turnManager._getTurnQueue();
       const newAction : IAbstractTurn = new ActionTurn(singleHitPlayerAction);
@@ -68,7 +68,7 @@ describe('Turn Manager', () => {
     it('handles priority correctly', () => {
       const teamManager = new TeamManager(sampleConfig);
       const arenaManager = new ArenaManager(sampleConfig);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
       
       const firstPriority = { ...singleHitPlayerAction, priority: 0 };
       const secondPriority = { ...singleHitPlayerAction, priority: 1 };
@@ -96,7 +96,7 @@ describe('Turn Manager', () => {
     it('uses hero speed for tie breakers', () => {
       const teamManager = new TeamManager(sampleConfig);
       const arenaManager = new ArenaManager(sampleConfig);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
       
       // hero 1 is faster than hero 2, so even though their moves have the same priority,
       // hero 1's should be first
@@ -128,7 +128,7 @@ describe('Turn Manager', () => {
       const configClone = cloneObject(sampleConfig);
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
 
       turnManager.addPlayerTurn(singleHitPlayerAction);
       const actionLog : string[] = turnManager.processTurnQueue();
@@ -146,7 +146,7 @@ describe('Turn Manager', () => {
       const configClone = cloneObject(sampleConfig);
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
   
       turnManager.addPlayerTurn(multiHitPlayerAction);
       const actionLog : string[] = turnManager.processTurnQueue();
@@ -172,7 +172,7 @@ describe('Turn Manager', () => {
       configClone.enemyTeam = enemyTeam;
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
 
       turnManager.addPlayerTurn({
         actionType: 'ActionTurn',
@@ -203,7 +203,7 @@ describe('Turn Manager', () => {
       configClone.enemyTeam = enemyTeam;
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
 
       turnManager.addPlayerTurn({
         actionType: 'ActionTurn',
@@ -245,7 +245,7 @@ describe('Turn Manager', () => {
       ];
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
 
       const actionLog = turnManager.processTurnQueue();
       expect(actionLog).to.deep.equal(expectedActionLog);
@@ -275,7 +275,7 @@ describe('Turn Manager', () => {
       ];
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
       const actionLog : string[] = turnManager.processTurnQueue();
       expect(actionLog).to.deep.equal(expectedActionLog);
       expect(teamManager.getHero('4').getHealth()).to.equal(0);
@@ -297,7 +297,7 @@ describe('Turn Manager', () => {
       const expectedActionLog : string[] = [];
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
       const actionLog : string[] = turnManager.processTurnQueue();
       expect(actionLog).to.deep.equal(expectedActionLog);
     })
@@ -317,7 +317,7 @@ describe('Turn Manager', () => {
       configClone.enemyTeam = enemyTeam;
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
 
       // process once
       turnManager.processTurnQueue();
@@ -348,7 +348,7 @@ describe('Turn Manager', () => {
       configClone.enemyTeam = enemyTeam;
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
-      const turnManager = new TurnManager(teamManager, arenaManager);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
 
       turnManager.processTurnQueue();
       turnManager.processTurnQueue();
@@ -366,6 +366,194 @@ describe('Turn Manager', () => {
       // this action log should not have healing effects
       const noHealLog = turnManager.processTurnQueue();
       expect(noHealLog).to.deep.equal([]);
+    })
+  })
+
+  describe.only('Switch turns', () => {
+    it ('correctly switches out player hero', () => {
+      const configClone = cloneObject(sampleConfig);
+      const playerTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+        '2': { name: 'hero2', attack: 10, defense: 10, health: 50, speed: 25, heroId: '2', effects: [] }
+      }
+      configClone.playerTeam = playerTeam;
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+      turnManager.addPlayerTurn({
+        actionType: 'SwitchTurn',
+        newActiveHero: '2',
+        side: 'player'
+      })
+      const expectedActionLog : string[] = [
+        'Player sent out hero2'
+      ]
+      const actionLog : string[] = turnManager.processTurnQueue();
+      expect(actionLog).to.deep.equal(expectedActionLog);
+      expect(teamManager.getActivePlayerHero().getName()).to.equal(playerTeam['2'].name);
+      expect(teamManager.getActivePlayerHero().getHeroId()).to.equal('2');
+    })
+    it('correctly switches out an enemy hero', () => {
+      const configClone = cloneObject(sampleConfig);
+      const enemyTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+        '2': { name: 'hero2', attack: 10, defense: 10, health: 50, speed: 25, heroId: '2', effects: [] }
+      }
+      configClone.enemyTeam = enemyTeam;
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+      turnManager.addPlayerTurn({
+        actionType: 'SwitchTurn',
+        newActiveHero: '2',
+        side: 'enemy'
+      })
+      const expectedActionLog : string[] = [
+        'Enemy sent out hero2'
+      ]
+      const actionLog : string[] = turnManager.processTurnQueue();
+      expect(actionLog).to.deep.equal(expectedActionLog);
+      expect(teamManager.getActiveEnemyHero().getName()).to.equal(enemyTeam['2'].name);
+      expect(teamManager.getActiveEnemyHero().getHeroId()).to.equal('2');
+    })
+    it('does not allow switching to nonexistent or dead heroes', () => {
+      const configClone = cloneObject(sampleConfig);
+      const playerTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+        '2': { name: 'hero2', attack: 10, defense: 10, health: 0, speed: 25, heroId: '2', effects: [] }
+      }
+      configClone.playerTeam = playerTeam;
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+      turnManager.addPlayerTurn({
+        actionType: 'SwitchTurn',
+        newActiveHero: '3',
+        side: 'player'
+      })
+      const actionLogNonexistentHero : string[] = turnManager.processTurnQueue();
+      expect(actionLogNonexistentHero).to.deep.equal([]);
+
+      turnManager.addPlayerTurn({
+        actionType: 'SwitchTurn',
+        newActiveHero: '2',
+        side: 'player'
+      })
+
+      const actionLogDeadHero : string[] = turnManager.processTurnQueue();
+      expect(actionLogDeadHero).to.deep.equal([]);
+    })
+    it('puts all switch actions at top priority', () => {
+      const configClone = cloneObject(sampleConfig);
+      const playerTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+        '2': { name: 'hero2', attack: 10, defense: 10, health: 50, speed: 25, heroId: '2', effects: [] }
+      }
+      const enemyTeam : LooseObject = {
+        '3': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+        '4': { name: 'enemy2', attack: 10, defense: 10, health: 50, speed: 10, heroId: '1', effects: [] },
+      }
+      configClone.playerTeam = playerTeam;
+      configClone.enemyTeam = enemyTeam;
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+      turnManager.addPlayerTurn({
+        actionType: 'ActionTurn',
+        move: {
+          power: 10,
+          name: 'KO move'
+        },
+        sourceHeroId: '3',
+        targetHeroIds: ['1'],
+        priority: 1
+      })
+      turnManager.addPlayerTurn({
+        actionType: 'SwitchTurn',
+        newActiveHero: '2',
+        side: 'player'
+      })
+      const expectedFirstAction = 'Player sent out hero2';
+      const actionLog = turnManager.processTurnQueue();
+      expect(actionLog[0]).to.equal(expectedFirstAction);
+      expect(teamManager.getActivePlayerHero().getHeroId()).to.equal('2');
+    })
+
+    it('redirects all attacks at the new active hero', () => {
+      const configClone = cloneObject(sampleConfig);
+      const playerTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+        '2': { name: 'hero2', attack: 10, defense: 10, health: 50, speed: 25, heroId: '2', effects: [] }
+      }
+      const enemyTeam : LooseObject = {
+        '3': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+        '4': { name: 'enemy2', attack: 10, defense: 10, health: 50, speed: 10, heroId: '1', effects: [] },
+      }
+      configClone.playerTeam = playerTeam;
+      configClone.enemyTeam = enemyTeam;
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+      turnManager.addPlayerTurn({
+        actionType: 'ActionTurn',
+        move: {
+          power: 10,
+          name: 'KO move'
+        },
+        sourceHeroId: '3',
+        targetHeroIds: ['1'],
+        priority: 1
+      })
+      turnManager.addPlayerTurn({
+        actionType: 'SwitchTurn',
+        newActiveHero: '2',
+        side: 'player'
+      })
+      const expectedAction = 'enemy1 used KO move and dealt 2 to hero2'
+      const actionLog = turnManager.processTurnQueue();
+      expect(actionLog[1]).to.equal(expectedAction);
+      expect(teamManager.getActivePlayerHero().getHeroId()).to.equal('2');
+      expect(teamManager.getHero('2').getHealth()).to.equal(playerTeam['2'].health - 2);
+    })
+
+    it('redirects single-target arena hazards towards the switched out hero as well', () => {
+      const configClone = cloneObject(sampleConfig);
+      const playerTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+        '2': { name: 'hero2', attack: 10, defense: 10, health: 50, speed: 25, heroId: '2', effects: [] }
+      }
+      const enemyTeam : LooseObject = {
+        '3': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+        '4': { name: 'enemy2', attack: 10, defense: 10, health: 50, speed: 10, heroId: '1', effects: [] },
+      }
+      configClone.playerTeam = playerTeam;
+      configClone.enemyTeam = enemyTeam;
+      configClone.hazards = [{
+        duration: 4,
+        name: 'Spikes',
+        priority: 1,
+        targetHeroes: ['1'],
+        effect: (heroes : LooseObject[]) : string[] => {
+          const actionLog : string[] = [];
+          heroes.forEach((h : LooseObject) => {
+            h.setHealth(h.getHealth() - 10);
+            actionLog.push(`${h.getName()} took 10 damage from spikes!`)
+          })
+          return actionLog;
+        }
+      }]
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+      turnManager.addPlayerTurn({
+        actionType: 'SwitchTurn',
+        newActiveHero: '2',
+        side: 'player'
+      })
+      const expectedAction = 'hero2 took 10 damage from spikes!';
+      const actionLog = turnManager.processTurnQueue();
+      expect(actionLog[1]).to.equal(expectedAction);
+      expect(teamManager.getHero('2').getHealth()).to.equal(playerTeam['2'].health - 10);
     })
   })
 })
