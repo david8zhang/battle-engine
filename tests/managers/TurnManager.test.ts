@@ -120,7 +120,7 @@ describe('Turn Manager', () => {
     });
   })
 
-  describe('Action turns', () => {
+  describe.only('Action turns', () => {
     it('processes single hit action turns correctly', () => {
       const expectedActionLog = [
         'hero1 used Sample Single Hit Move and dealt 2 to enemy1'
@@ -157,6 +157,39 @@ describe('Turn Manager', () => {
       expect(teamManager.getEnemyTeam()['4'].getHealth()).to.equal(148);
     });
 
+    it('processes multi-hit action turns correctly', () => {
+      const configClone = cloneObject(sampleConfig);
+      const playerTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 10, speed: 50, heroId: '1', effects: [] }
+      }
+      const enemyTeam : LooseObject = {
+        '2': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+      }
+      configClone.playerTeam = playerTeam;
+      configClone.enemyTeam = enemyTeam;
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+
+      turnManager.addPlayerTurn({
+        actionType: 'ActionTurn',
+        move: {
+          power: 10,
+          name: 'Multi hit move'
+        },
+        sourceHeroId: '2',
+        targetHeroIds: ['1', '1', '1'],
+        priority: -1
+      })
+      const expectedActionLog = [
+        'enemy1 used Multi hit move and dealt 2 to hero1',
+        'enemy1 used Multi hit move and dealt 2 to hero1',
+        'enemy1 used Multi hit move and dealt 2 to hero1',
+      ];
+      const actionLog : String[] = turnManager.processTurnQueue()
+      expect(actionLog).to.deep.equal(expectedActionLog);
+    })
+
     it('ensures health never goes below zero', () => {
       const expectedActionLog = [
         'hero1 used KO move and dealt 1 to enemy1'
@@ -186,13 +219,15 @@ describe('Turn Manager', () => {
       })
       const actionLog : string[] = turnManager.processTurnQueue();
       expect(actionLog.indexOf(null)).to.equal(-1);
-      expect(actionLog).to.deep.equal(expectedActionLog);
+      expect(actionLog[0]).to.deep.equal(expectedActionLog[0]);
       expect(teamManager.getActiveEnemyHero().getHealth()).to.equal(0);
     });
 
     it('handles dead heroes correctly', () => {
       const configClone = cloneObject(sampleConfig);
-      const expectedActionLog = ['hero1 used KO move and dealt 1 to enemy1'];
+      const expectedActionLog = [
+        'hero1 used KO move and dealt 1 to enemy1'
+      ];
       const playerTeam : LooseObject = {
         '1': { name: 'hero1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] }
       }
@@ -228,8 +263,99 @@ describe('Turn Manager', () => {
       })
 
       const actionLog : string[] = turnManager.processTurnQueue();
-      expect(actionLog).to.deep.equal(expectedActionLog);
+      expect(actionLog[0]).to.deep.equal(expectedActionLog[0]);
       expect(teamManager.getActivePlayerHero().getHealth()).to.equal(100);
+    })
+
+    it('displays a message if a hero dies', () => {
+      const configClone = cloneObject(sampleConfig);
+      const playerTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 1, speed: 50, heroId: '1', effects: [] }
+      }
+      const enemyTeam : LooseObject = {
+        '2': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+      }
+      configClone.playerTeam = playerTeam;
+      configClone.enemyTeam = enemyTeam;
+      configClone.hazards = sampleHazards;
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+
+      turnManager.addPlayerTurn({
+        actionType: 'ActionTurn',
+        move: {
+          power: 10,
+          name: 'KO move'
+        },
+        sourceHeroId: '2',
+        targetHeroIds: ['1'],
+        priority: 0
+      })
+      const actionLog : string[] = turnManager.processTurnQueue();
+      expect(actionLog[1]).to.equal('hero1 died!');
+    })
+
+    it('stops turn processing if player hero dies', () => {
+      const configClone = cloneObject(sampleConfig);
+      const playerTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 1, speed: 50, heroId: '1', effects: [] }
+      }
+      const enemyTeam : LooseObject = {
+        '2': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+      }
+      configClone.playerTeam = playerTeam;
+      configClone.enemyTeam = enemyTeam;
+      configClone.hazards = sampleHazards;
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+
+      turnManager.addPlayerTurn({
+        actionType: 'ActionTurn',
+        move: {
+          power: 10,
+          name: 'KO move'
+        },
+        sourceHeroId: '2',
+        targetHeroIds: ['1'],
+        priority: -1
+      })
+      turnManager.processTurnQueue()
+      expect(turnManager._getTurnQueue().size()).to.not.equal(0);
+    })
+
+    it('does not process attacks directed at dead heroes', () => {
+      const configClone = cloneObject(sampleConfig);
+      const playerTeam : LooseObject = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 1, speed: 50, heroId: '1', effects: [] }
+      }
+      const enemyTeam : LooseObject = {
+        '2': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '1', effects: [] },
+      }
+      configClone.playerTeam = playerTeam;
+      configClone.enemyTeam = enemyTeam;
+      configClone.hazards = sampleHazards;
+      const teamManager = new TeamManager(configClone);
+      const arenaManager = new ArenaManager(configClone);
+      const turnManager = new TurnManager(teamManager, arenaManager, null);
+
+      turnManager.addPlayerTurn({
+        actionType: 'ActionTurn',
+        move: {
+          power: 10,
+          name: 'Multi hit KO move'
+        },
+        sourceHeroId: '2',
+        targetHeroIds: ['1', '1', '1'],
+        priority: -1
+      })
+      const expectedActionLog = [
+        'enemy1 used Multi hit KO move and dealt 1 to hero1',
+        'hero1 died!'
+      ];
+      const actionLog : String[] = turnManager.processTurnQueue()
+      expect(actionLog).to.deep.equal(expectedActionLog);
     })
   })
 
@@ -369,7 +495,7 @@ describe('Turn Manager', () => {
     })
   })
 
-  describe.only('Switch turns', () => {
+  describe('Switch turns', () => {
     it ('correctly switches out player hero', () => {
       const configClone = cloneObject(sampleConfig);
       const playerTeam : LooseObject = {

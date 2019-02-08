@@ -99,6 +99,9 @@ export class TurnManager implements ITurnManager {
       const turnToProcess = this.turnQueue.dequeueTurn();
       const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
       actionLog = actionLog.concat(actions);
+      if (this.teamManager.getActivePlayerHero().getHealth() === 0) {
+        break;
+      }
     }
     return actionLog.filter((action) => action !== null);
   }

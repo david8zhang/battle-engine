@@ -55,9 +55,14 @@ export class ActionTurn implements IAbstractTurn {
       let targetHero : Hero
       if (playerTeam[id]) targetHero = playerTeam[id];
       if (enemyTeam[id]) targetHero = enemyTeam[id];
-      const damage = this.move.calculateDamage(sourceHero, targetHero);
-      targetHero.setHealth(targetHero.getHealth() - damage);
-      actionLogs.push(`${sourceHero.getName()} used ${this.move.getName()} and dealt ${damage} to ${targetHero.getName()}`);
+      if (targetHero.getHealth() > 0) {
+        const damage = this.move.calculateDamage(sourceHero, targetHero);
+        targetHero.setHealth(targetHero.getHealth() - damage);
+        actionLogs.push(`${sourceHero.getName()} used ${this.move.getName()} and dealt ${damage} to ${targetHero.getName()}`);
+        if (targetHero.getHealth() === 0) {
+          actionLogs.push(`${targetHero.getName()} died!`);
+        }
+      }
     })
     return actionLogs;
   }
