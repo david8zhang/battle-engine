@@ -39,11 +39,19 @@ export const sampleHazards : LooseObject[] = [{
   name: 'Healing Effect',
   priority: 1,
   targetHeroes: ['1', '2'],
-  effect: (heroes : LooseObject[]) : string[] => {
-    const actionLog : string[] = [];
+  effect: (heroes : LooseObject[]) : LooseObject[] => {
+    const actionLog : LooseObject[] = [];
     heroes.forEach((h : LooseObject) => {
       h.setHealth(h.getHealth() + 10);
-      actionLog.push(`${h.getName()} healed 10 hp from Healing Effect`)
+      actionLog.push({
+        type: 'Effect',
+        message:  `${h.getName()} healed 10 hp from Healing Effect`,
+        result: {
+          hp: 10,
+          targetHeroId: h.getHeroId(),
+          effect: 'Healing Effect'
+        }
+      })
     })
     return actionLog;
   }
@@ -52,11 +60,19 @@ export const sampleHazards : LooseObject[] = [{
   name: 'Poison Effect',
   priority: 0,
   targetHeroes: ['3', '4'],
-  effect: (heroes : LooseObject[]) : string[] => {
-    const actionLog : string[] = [];
+  effect: (heroes : LooseObject[]) : LooseObject[] => {
+    const actionLog : LooseObject[] = [];
     heroes.forEach((h : LooseObject) => {
       h.setHealth(h.getHealth() - 10)
-      actionLog.push(`${h.getName()} took 10 damage from Poison Effect`)
+      actionLog.push({
+        type: 'Effect',
+        message:  `${h.getName()} took 10 damage from Poison Effect`,
+        result: {
+          hp: -10,
+          targetHeroId: h.getHeroId(),
+          effect: 'Poison Effect'
+        }
+      })
     })
     return actionLog;
   }

@@ -14,8 +14,8 @@ export class SwitchTurn implements IAbstractTurn {
     this.side = config.side;
   }
 
-  public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : string[] {
-    const actionLog = [];
+  public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : LooseObject[] {
+    const actionLog : LooseObject[] = [];
     if (teamManager.getHero(this.newActiveHero).getHealth() === 0) {
       console.error('Hero to switch to is already dead!', this.newActiveHero);
       return null;
@@ -26,8 +26,17 @@ export class SwitchTurn implements IAbstractTurn {
         return null;
       }
       this.redirectAttacks(this.newActiveHero, turnQueue);
+      const oldActiveHero = teamManager.getActivePlayerHero();
       teamManager.setActivePlayerHero(this.newActiveHero);
-      actionLog.push(`Player sent out ${teamManager.getHero(this.newActiveHero).getName()}`)
+      actionLog.push({
+        type: 'Switch',
+        message: `Player sent out ${teamManager.getHero(this.newActiveHero).getName()}`,
+        result: {
+          side: this.side,
+          old: oldActiveHero.getHeroId(),
+          new: this.newActiveHero
+        }
+      });
       return actionLog;
     } else {
       if (!teamManager.getEnemyTeam()[this.newActiveHero]) {
@@ -35,8 +44,17 @@ export class SwitchTurn implements IAbstractTurn {
         return null;
       }
       this.redirectAttacks(this.newActiveHero, turnQueue);
+      const oldActiveHero = teamManager.getActivePlayerHero();
       teamManager.setActiveEnemyHero(this.newActiveHero);
-      actionLog.push(`Enemy sent out ${teamManager.getHero(this.newActiveHero).getName()}`)
+      actionLog.push({
+        type: 'Switch',
+        message: `Enemy sent out ${teamManager.getHero(this.newActiveHero).getName()}`,
+        result: {
+          side: this.side,
+          old: oldActiveHero.getHeroId(),
+          new: this.newActiveHero
+        }
+      })
       return actionLog;
     }
   }

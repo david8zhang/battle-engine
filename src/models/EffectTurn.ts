@@ -20,7 +20,7 @@ export class EffectTurn implements IAbstractTurn {
     if (config.effect) this.effect = config.effect;
   }
 
-  public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : string[] {
+  public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : LooseObject[] {
     const targets : Hero[] = [];
     this.targetHeroes.forEach((id : string) => {
       const hero = teamManager.getHero(id);

@@ -36,10 +36,10 @@ export class ActionTurn implements IAbstractTurn {
     return this.sourceHeroId;
   }
 
-  public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : string[] {
+  public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : LooseObject[] {
     const playerTeam = teamManager.getPlayerTeam();
     const enemyTeam = teamManager.getEnemyTeam();
-    const actionLogs : string[] = [];
+    const actionLogs : LooseObject[] = [];
     let sourceHero : Hero;
 
     if (playerTeam[this.sourceHeroId] !== undefined) sourceHero = playerTeam[this.sourceHeroId]
@@ -58,9 +58,24 @@ export class ActionTurn implements IAbstractTurn {
       if (targetHero.getHealth() > 0) {
         const damage = this.move.calculateDamage(sourceHero, targetHero);
         targetHero.setHealth(targetHero.getHealth() - damage);
-        actionLogs.push(`${sourceHero.getName()} used ${this.move.getName()} and dealt ${damage} to ${targetHero.getName()}`);
+        actionLogs.push({
+          type: 'Action',
+          message: `${sourceHero.getName()} used ${this.move.getName()} and dealt ${damage} to ${targetHero.getName()}`,
+          result: {
+            damage,
+            sourceHeroId: this.sourceHeroId,
+            targetHeroId: targetHero.getHeroId(),
+            move: this.move.getName()
+          }
+        });
         if (targetHero.getHealth() === 0) {
-          actionLogs.push(`${targetHero.getName()} died!`);
+          actionLogs.push({
+            type: 'Death',
+            message: `${targetHero.getName()} died!`,
+            result: {
+              targetHeroId: targetHero.getHeroId()
+            }
+          });
         }
       }
     })

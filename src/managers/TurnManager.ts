@@ -88,13 +88,13 @@ export class TurnManager implements ITurnManager {
    * Process the turn queue and return a log of what happened
    * (to show to the UI)
    */
-  public processTurnQueue() : string[] {
+  public processTurnQueue() : LooseObject[] {
     this.addEffectsToQueue();
     if (this.cpuManager) {
       this.addCPUTurn();
     }
 
-    let actionLog : string[] = [];
+    let actionLog : LooseObject[] = [];
     while (this.turnQueue.size() > 0) {
       const turnToProcess = this.turnQueue.dequeueTurn();
       const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
@@ -104,6 +104,18 @@ export class TurnManager implements ITurnManager {
       }
     }
     return actionLog.filter((action) => action !== null);
+  }
+
+  /**
+   * Generate a snapshot of what occurred during the previous turn
+   */
+  public getStateSnapshot() : LooseObject {
+    const playerHero = this.teamManager.getActivePlayerHero();
+    const enemyHero = this.teamManager.getActiveEnemyHero();
+    const playerTeam = this.teamManager.getPlayerTeam();
+    const enemyTeam = this.teamManager.getEnemyTeam();
+    const hazards = this.arenaManager.getHazards();
+    return { playerHero, enemyHero, playerTeam, enemyTeam, hazards };
   }
 
   /**
