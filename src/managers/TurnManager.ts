@@ -9,6 +9,7 @@ import { EffectTurn } from '../models/EffectTurn';
 import { ActionTurn } from '../models/ActionTurn';
 import { SwitchTurn } from '../models/SwitchTurn';
 import { ICPUManager } from "../interface/ICPUManager";
+import { Hero } from "../models/Hero";
 
 const TurnFactory : LooseObject = {
   ActionTurn,
@@ -99,6 +100,10 @@ export class TurnManager implements ITurnManager {
       const turnToProcess = this.turnQueue.dequeueTurn();
       const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
       actionLog = actionLog.concat(actions);
+      this.checkWinCondition(actionLog);
+      if (this.teamManager.getActiveEnemyHero().getHealth() === 0) {
+        this.addCPUTurn()
+      }
       if (this.teamManager.getActivePlayerHero().getHealth() === 0) {
         break;
       }
@@ -107,15 +112,43 @@ export class TurnManager implements ITurnManager {
   }
 
   /**
-   * Generate a snapshot of what occurred during the previous turn
+   * Checks if either side has all of their heroes dead
    */
-  public getStateSnapshot() : LooseObject {
-    const playerHero = this.teamManager.getActivePlayerHero();
-    const enemyHero = this.teamManager.getActiveEnemyHero();
+  public checkWinCondition(actionLog : LooseObject[]) : void {
     const playerTeam = this.teamManager.getPlayerTeam();
     const enemyTeam = this.teamManager.getEnemyTeam();
-    const hazards = this.arenaManager.getHazards();
-    return { playerHero, enemyHero, playerTeam, enemyTeam, hazards };
+    let enemyWin = true;
+    Object.keys(playerTeam).forEach((key : string) => {
+      const p : Hero = playerTeam[key];
+      if (p.getHealth() > 0) {
+        enemyWin = false;
+      }
+    })
+    let playerWin = true;
+    Object.keys(enemyTeam).forEach((key : string) => {
+      const e : Hero = enemyTeam[key];
+      if (e.getHealth() > 0) {
+        playerWin = false;
+      }
+    })
+    if (playerWin) {
+      actionLog.push({
+        type: 'Win',
+        result: {
+          side: 'player'
+        }
+      })
+      return;
+    }
+    if (enemyWin) {
+      actionLog.push({
+        type: 'Win',
+        result: {
+          side: 'enemy'
+        }
+      })
+      return;
+    }
   }
 
   /**
@@ -155,8 +188,10 @@ export class TurnManager implements ITurnManager {
    * addCPUTurn - add a new turn calculated by the CPU
    */
   public addCPUTurn() {
-    const cpuTurn : IAbstractTurn = this.cpuManager.getCPUTurn(this.arenaManager, this.teamManager);
-    this.turnQueue.enqueueTurn(cpuTurn);
+    if (this.cpuManager) {
+      const cpuTurn : IAbstractTurn = this.cpuManager.getCPUTurn(this.arenaManager, this.teamManager);
+      this.turnQueue.enqueueTurn(cpuTurn);
+    }
   }
 
 

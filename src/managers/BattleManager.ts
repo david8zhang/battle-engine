@@ -25,7 +25,9 @@ export class BattleManager implements IBattleManager {
     this.turnManager = new TurnManager(this.teamManager, this.arenaManager, this.cpuManager);
   }
 
-  public doPlayerTurn(playerInput : LooseObject) {
+  public doPlayerTurn(playerInput : LooseObject) : LooseObject[] {
     this.turnManager.addPlayerTurn(playerInput);
+    const actionLog : LooseObject[] = this.turnManager.processTurnQueue();
+    return actionLog;
   }
 }

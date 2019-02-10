@@ -14,6 +14,16 @@ export class SwitchTurn implements IAbstractTurn {
     this.side = config.side;
   }
 
+  // debugging only
+  public _getNewActiveHero() : string {
+    return this.newActiveHero;
+  }
+
+  // debugging only
+  public _getSide() : string {
+    return this.side;
+  }
+
   public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : LooseObject[] {
     const actionLog : LooseObject[] = [];
     if (teamManager.getHero(this.newActiveHero).getHealth() === 0) {
