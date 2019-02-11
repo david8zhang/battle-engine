@@ -159,5 +159,91 @@ describe('BattleManager', () => {
       })
       expect(actionLog3).to.deep.equal(expectedActionLog3);
     })
+    it('simulates a game where player loses', () => {
+      const configClone = cloneObject(sampleConfig);
+      const sampleMoveSet : LooseObject[] = [{
+        name: 'Move1',
+        power: 10,
+        priority: 0
+      }, {
+        name: 'Move2',
+        power: 10,
+        priority: 0
+      }]
+      const effects : LooseObject[] = [];
+      const simplifiedPlayerTeam = {
+        '1': { name: 'hero1', attack: 10, defense: 10, health: 4, speed: 50, heroId: '1', effects, moveSet: sampleMoveSet },
+        '2': { name: 'hero2', attack: 15, defense: 15, health: 4, speed: 25, heroId: '2', effects, moveSet: sampleMoveSet },
+      }
+      const simplifiedEnemyTeam = {
+        '3': { name: 'enemy1', attack: 1000, defense: 10, health: 100, speed: 1000, heroId: '3', effects, moveSet: sampleMoveSet },
+        '4': { name: 'enemy2', attack: 1000, defense: 15, health: 100, speed: 1000, heroId: '4', effects, moveSet: sampleMoveSet },
+      }
+      configClone.playerTeam = simplifiedPlayerTeam;
+      configClone.enemyTeam = simplifiedEnemyTeam;
+      const battleManager : BattleManager = new BattleManager(configClone);
+
+      const expectedActionLog1 = [{
+        type: 'Action',
+        message: 'enemy1 used Move1 and dealt 4 to hero1',
+        result: {
+          damage: 4,
+          targetHeroId: '1',
+          sourceHeroId: '3',
+          move: 'Move1'
+        }
+      }, {
+        type: 'Death',
+        message: 'hero1 died!',
+        result: {
+          targetHeroId: '1'
+        }
+      }];
+      const actionLog1 = battleManager.doPlayerTurn({
+        actionType: 'ActionTurn',
+        move: sampleMoveSet[0],
+        sourceHeroId: '1',
+        targetHeroIds: ['3'],
+        priority: sampleMoveSet[0].priority
+      });
+      expect(actionLog1).to.deep.equal(expectedActionLog1);
+
+      /** Player Switch */
+      const expectedActionLog2 = [{
+        type: 'Switch',
+        message: 'Player sent out hero2',
+        result: {
+          side: 'player',
+          old: '1',
+          new: '2'
+        }
+      }, {
+        type: 'Action',
+        message: 'enemy1 used Move1 and dealt 4 to hero2',
+        result: {
+          damage: 4,
+          targetHeroId: '2',
+          sourceHeroId: '3',
+          move: 'Move1'
+        }
+      }, {
+        type: 'Death',
+        message: 'hero2 died!',
+        result: {
+          targetHeroId: '2'
+        }
+      }, {
+        type: 'Win',
+        result: {
+          side: 'enemy'
+        }
+      }];
+      const actionLog2 = battleManager.doPlayerTurn({
+        actionType: 'SwitchTurn',
+        newActiveHero: '2',
+        side: 'player'
+      });
+      expect(actionLog2).to.deep.equal(expectedActionLog2);
+    })
   })
 })
