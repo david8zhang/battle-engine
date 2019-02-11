@@ -54,7 +54,7 @@ export class SwitchTurn implements IAbstractTurn {
         return null;
       }
       this.redirectAttacks(this.newActiveHero, turnQueue);
-      const oldActiveHero = teamManager.getActivePlayerHero();
+      const oldActiveHero = teamManager.getActiveEnemyHero();
       teamManager.setActiveEnemyHero(this.newActiveHero);
       actionLog.push({
         type: 'Switch',

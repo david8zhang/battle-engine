@@ -51,6 +51,17 @@ export class CPUManager implements ICPUManager {
     })
   }
 
+  private allDead(enemyTeam : LooseObject) : boolean {
+    let allDead = true;
+    Object.keys(enemyTeam).forEach((heroId : string) => {
+      const enemy : LooseObject = enemyTeam[heroId];
+      if (enemy.getHealth() > 0) {
+        allDead = false;
+      }
+    })
+    return allDead;
+  }
+
   getCPUTurn(arenaManager : IArenaManager, teamManager : ITeamManager) : IAbstractTurn {
     const hazards = arenaManager.getHazards();
     const playerHero = teamManager.getActivePlayerHero();
@@ -59,6 +70,9 @@ export class CPUManager implements ICPUManager {
     const enemyTeam = teamManager.getEnemyTeam();
     const params = { hazards, playerHero, enemyHero, playerTeam, enemyTeam };
 
+    if (this.allDead(enemyTeam)) {
+      return null;
+    }
     if (enemyHero.getHealth() === 0) {
       if (this.switchCalculator) {
         return new SwitchTurn(this.switchCalculator(params));

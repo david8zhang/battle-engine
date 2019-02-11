@@ -946,7 +946,7 @@ describe('Turn Manager', () => {
     })
   })
 
-  describe.only('Win Condition check', () => {
+  describe('Win Condition check', () => {
     it('correctly detects a player win condition', () => {
       const configClone = cloneObject(sampleConfig);
       const playerTeam : LooseObject = {

@@ -70,6 +70,11 @@ export class TurnQueue {
   public size() {
     return this.queue.length;
   }
+
+  // Debugging only!
+  public _getQueue() {
+    return this.queue;
+  }
 }
 
 export class TurnManager implements ITurnManager {
@@ -100,7 +105,9 @@ export class TurnManager implements ITurnManager {
       const turnToProcess = this.turnQueue.dequeueTurn();
       const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
       actionLog = actionLog.concat(actions);
-      this.checkWinCondition(actionLog);
+      if (this.checkWinCondition(actionLog)) {
+        break;
+      }
       if (this.teamManager.getActiveEnemyHero().getHealth() === 0) {
         this.addCPUTurn()
       }
@@ -114,7 +121,7 @@ export class TurnManager implements ITurnManager {
   /**
    * Checks if either side has all of their heroes dead
    */
-  public checkWinCondition(actionLog : LooseObject[]) : void {
+  public checkWinCondition(actionLog : LooseObject[]) : boolean {
     const playerTeam = this.teamManager.getPlayerTeam();
     const enemyTeam = this.teamManager.getEnemyTeam();
     let enemyWin = true;
@@ -138,7 +145,7 @@ export class TurnManager implements ITurnManager {
           side: 'player'
         }
       })
-      return;
+      return true;
     }
     if (enemyWin) {
       actionLog.push({
@@ -147,8 +154,9 @@ export class TurnManager implements ITurnManager {
           side: 'enemy'
         }
       })
-      return;
+      return true;
     }
+    return false;
   }
 
   /**
@@ -190,7 +198,9 @@ export class TurnManager implements ITurnManager {
   public addCPUTurn() {
     if (this.cpuManager) {
       const cpuTurn : IAbstractTurn = this.cpuManager.getCPUTurn(this.arenaManager, this.teamManager);
-      this.turnQueue.enqueueTurn(cpuTurn);
+      if (cpuTurn) {
+        this.turnQueue.enqueueTurn(cpuTurn);
+      }
     }
   }
 

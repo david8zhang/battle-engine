@@ -11,6 +11,8 @@ import { ArenaManager } from './ArenaManager';
 import { TurnManager } from "./TurnManager";
 import { CPUManager } from "./CPUManager";
 import { ICPUManager } from "../interface/ICPUManager";
+import { Hero } from "../models/Hero";
+import { Move } from "../models/Move";
 
 export class BattleManager implements IBattleManager {
   private teamManager : ITeamManager;
@@ -30,4 +32,53 @@ export class BattleManager implements IBattleManager {
     const actionLog : LooseObject[] = this.turnManager.processTurnQueue();
     return actionLog;
   }
-}
+
+  public getEnemyTeam() {
+    return this.deserializeTeam(this.teamManager.getEnemyTeam());
+  }
+
+  public getPlayerTeam() {
+    return this.deserializeTeam(this.teamManager.getPlayerTeam());
+  }
+
+  public getActivePlayerHero() {
+    return this.deserializeHero(this.teamManager.getActivePlayerHero());
+  }
+
+  public getActiveEnemyHero() {
+    return this.deserializeHero(this.teamManager.getActiveEnemyHero());
+  }
+
+  /** Private methods */
+  private deserializeMoves(moves : Move[]) {
+    return moves.map((m : Move) => {
+      return {
+        name: m.getName(),
+        power: m.getPower(),
+        priority: m.getPriority()
+      }
+    })
+  }
+
+  private deserializeTeam(team : LooseObject) {
+    const deserializedResult : any[] = [];
+    Object.keys(team).forEach((id : string) => {
+      const e : Hero = team[id];
+      deserializedResult.push(this.deserializeHero(e));
+    })
+    return deserializedResult;
+  }
+
+  private deserializeHero(hero : Hero) {
+    return {
+      name: hero.getName(),
+      health: hero.getHealth(),
+      attack: hero.getAttack(),
+      defense: hero.getDefense(),
+      speed: hero.getSpeed(),
+      heroId: hero.getHeroId(),
+      effects: hero.getEffects(),
+      moveSet: this.deserializeMoves(hero.getMoveSet())
+    }
+  }
+} 
