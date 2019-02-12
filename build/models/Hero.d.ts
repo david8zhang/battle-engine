@@ -1,0 +1,31 @@
+import { IAbstractTurn } from "../interface/IAbstractTurn";
+import { LooseObject } from "../interface/LooseObject";
+import { Move } from "./Move";
+export declare class Hero {
+    private heroId;
+    private name;
+    private attack;
+    private defense;
+    private speed;
+    private health;
+    private effects;
+    private moveSet;
+    constructor(config: LooseObject);
+    getName(): string;
+    setName(name: string): void;
+    getAttack(): number;
+    setAttack(attack: number): void;
+    getDefense(): number;
+    setDefense(defense: number): void;
+    getHealth(): number;
+    setHealth(health: number): void;
+    getSpeed(): number;
+    setSpeed(speed: number): void;
+    getHeroId(): string;
+    setHeroId(heroId: string): void;
+    getEffects(): IAbstractTurn[];
+    getMoveSet(): Move[];
+    setMoveSet(moves: LooseObject[]): void;
+    setEffects(effects: IAbstractTurn[]): void;
+    generateHeroObject(rawObject: LooseObject): void;
+}
