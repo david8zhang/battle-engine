@@ -9,7 +9,9 @@
     "build": "tsc",
     "lint": "tslint -p tsconfig.json"
   },
-  "files": ["build/**/*"],
+  "files": [
+    "build/**/*"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",
