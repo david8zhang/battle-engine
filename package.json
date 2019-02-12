@@ -9,11 +9,15 @@
     "build": "tsc",
     "lint": "tslint -p tsconfig.json"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/david8zhang/battle-engine"
+  },
   "files": [
     "build/**/*"
   ],
   "keywords": [],
-  "author": "",
+  "author": "david8zhang",
   "license": "ISC",
   "dependencies": {
     "@types/node": "^10.12.15",
