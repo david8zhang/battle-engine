@@ -76,6 +76,7 @@ export class BattleManager implements IBattleManager {
       attack: hero.getAttack(),
       defense: hero.getDefense(),
       speed: hero.getSpeed(),
+      level: hero.getLevel(),
       heroId: hero.getHeroId(),
       effects: hero.getEffects(),
       moveSet: this.deserializeMoves(hero.getMoveSet())

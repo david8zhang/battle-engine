@@ -246,7 +246,7 @@ describe('BattleManager', () => {
       expect(actionLog2).to.deep.equal(expectedActionLog2);
     })
   })
-  describe('No configuration game', () => {
+  describe.only('No configuration game', () => {
     it('Generates a default CPU even if no configuration is passed in', () => {
       const battleManager = new BattleManager({});
 

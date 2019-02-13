@@ -12,6 +12,7 @@ export class Hero {
   private defense : number = 0;
   private speed: number = 0;
   private health : number = 0;
+  private level : number = 1;
   private effects : IAbstractTurn[] = [];
   private moveSet : Move[] = [];
 
@@ -20,6 +21,7 @@ export class Hero {
     if (config.heroId) this.heroId = config.heroId;
     if (config.attack) this.attack = config.attack;
     if (config.defense) this.defense = config.defense;
+    if (config.level) this.level = config.level;
     if (config.speed) this.speed = config.speed;
     if (config.health) this.health = config.health;
     if (config.effects) this.effects = config.effects.map((effect : LooseObject) => new EffectTurn(effect));
@@ -72,6 +74,14 @@ export class Hero {
 
   public setHeroId(heroId : string) : void {
     this.heroId = heroId;
+  }
+
+  public getLevel() : number {
+    return this.level;
+  }
+
+  public setLevel(level : number) : void {
+    this.level = level;
   }
 
   public getEffects() : IAbstractTurn[] {

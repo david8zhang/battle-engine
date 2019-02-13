@@ -12,6 +12,7 @@ describe('Hero', () => {
       defense: 10,
       health: 150,
       speed: 10,
+      level: 55,
       name: 'hero 1',
       heroId: '1',
       effects: [],

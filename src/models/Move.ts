@@ -37,7 +37,9 @@ export class Move {
   }
 
   public calculateDamage(sourceHero : Hero, targetHero : Hero) : number {
-    let damage = (((this.power * sourceHero.getAttack() / targetHero.getDefense()) / 50) + 2)
+    const attackDefenseRatio : number = sourceHero.getAttack() / targetHero.getDefense();
+    const levelModifier : number = ((2.0 * sourceHero.getLevel()) / 5.0) + 2;
+    let damage = ((levelModifier * this.power * attackDefenseRatio / 50) + 2)
     if (damage > targetHero.getHealth()) damage = targetHero.getHealth();
     return Math.floor(damage);
   }

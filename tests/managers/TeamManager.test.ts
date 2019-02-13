@@ -21,6 +21,7 @@ describe('Team Manager', () => {
         expect(hero).to.have.property('name');
         expect(hero).to.have.property('health');
         expect(hero).to.have.property('attack');
+        expect(hero).to.have.property('level');
         expect(hero).to.have.property('defense');
         expect(hero).to.have.property('effects');
       })
@@ -35,6 +36,7 @@ describe('Team Manager', () => {
         expect(hero).to.have.property('name');
         expect(hero).to.have.property('health');
         expect(hero).to.have.property('attack');
+        expect(hero).to.have.property('level');
         expect(hero).to.have.property('defense');
         expect(hero).to.have.property('effects');
       })
