@@ -246,4 +246,27 @@ describe('BattleManager', () => {
       expect(actionLog2).to.deep.equal(expectedActionLog2);
     })
   })
+  describe.only('No configuration game', () => {
+    it('Generates a default CPU even if no configuration is passed in', () => {
+      const battleManager = new BattleManager({});
+
+      // Get the active player hero
+      const playerHero = battleManager.getActivePlayerHero();
+
+      // Get the active enemy hero
+      const enemyHero = battleManager.getActiveEnemyHero();
+
+      // Player Input
+      const playerAttackTurn = {
+          actionType: 'ActionTurn',
+          move: playerHero.moveSet[0],
+          sourceHeroId: playerHero.heroId,
+          targetHeroIds: [enemyHero.heroId],
+          priority: playerHero.moveSet[0].priority
+      }
+
+      const actionLog : LooseObject[] = battleManager.doPlayerTurn(playerAttackTurn);
+      expect(actionLog.length).to.be.greaterThan(1);
+    })
+  })
 })

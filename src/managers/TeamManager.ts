@@ -8,7 +8,7 @@ import { Hero } from '../models/Hero';
 /** utils */
 const uuidV4 = require('uuid/v4');
 
-const randomGenerator = function () : LooseObject {
+const randomGenerator = function (side : string) : LooseObject {
   const heroes : LooseObject = {};
   for (let i = 0; i < 6; i++) {
     const heroId = uuidV4();
@@ -16,7 +16,7 @@ const randomGenerator = function () : LooseObject {
       attack: Math.floor(Math.random() * 10),
       defense: Math.floor(Math.random() * 10),
       health: Math.floor(Math.random() * 100) + 50,
-      name: `Robo Hero ${i}`,
+      name: `${side} Robo Hero ${i}`,
       heroId,
       moveSet: [{
         power: 10,
@@ -44,8 +44,8 @@ export class TeamManager implements ITeamManager {
     if (battleConfig.playerTeam) this.playerTeam = this.convertToHeroes(battleConfig.playerTeam);
     if (battleConfig.enemyTeam) this.enemyTeam = this.convertToHeroes(battleConfig.enemyTeam);
    
-    if (!this.playerTeam) this.playerTeam = randomGenerator();
-    if (!this.enemyTeam) this.enemyTeam = randomGenerator();
+    if (!this.playerTeam) this.playerTeam = randomGenerator('Player');
+    if (!this.enemyTeam) this.enemyTeam = randomGenerator('Enemy');
 
     this.activePlayerHero = battleConfig.activePlayerHero || Object.keys(this.playerTeam)[0];
     this.activeEnemyHero = battleConfig.activeEnemyHero || Object.keys(this.enemyTeam)[0];

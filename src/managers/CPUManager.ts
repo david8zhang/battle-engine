@@ -62,7 +62,7 @@ export class CPUManager implements ICPUManager {
     return allDead;
   }
 
-  getCPUTurn(arenaManager : IArenaManager, teamManager : ITeamManager) : IAbstractTurn {
+  public getCPUTurn(arenaManager : IArenaManager, teamManager : ITeamManager) : IAbstractTurn {
     const hazards = arenaManager.getHazards();
     const playerHero = teamManager.getActivePlayerHero();
     const enemyHero = teamManager.getActiveEnemyHero();
