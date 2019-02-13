@@ -246,7 +246,7 @@ describe('BattleManager', () => {
       expect(actionLog2).to.deep.equal(expectedActionLog2);
     })
   })
-  describe.only('No configuration game', () => {
+  describe('No configuration game', () => {
     it('Generates a default CPU even if no configuration is passed in', () => {
       const battleManager = new BattleManager({});
 
@@ -259,10 +259,10 @@ describe('BattleManager', () => {
       // Player Input
       const playerAttackTurn = {
           actionType: 'ActionTurn',
-          move: playerHero.moveSet[0],
+          move: playerHero.moveSet[2],
           sourceHeroId: playerHero.heroId,
           targetHeroIds: [enemyHero.heroId],
-          priority: playerHero.moveSet[0].priority
+          priority: playerHero.moveSet[2].priority
       }
 
       const actionLog : LooseObject[] = battleManager.doPlayerTurn(playerAttackTurn);

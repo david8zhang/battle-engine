@@ -13,8 +13,8 @@ const randomGenerator = function (side : string) : LooseObject {
   for (let i = 0; i < 6; i++) {
     const heroId = uuidV4();
     const newHero = new Hero({
-      attack: Math.floor(Math.random() * 10),
-      defense: Math.floor(Math.random() * 10),
+      attack: Math.floor(Math.random() * 300) + 100,
+      defense: Math.floor(Math.random() * 5) + 0,
       health: Math.floor(Math.random() * 100) + 50,
       name: `${side} Robo Hero ${i}`,
       heroId,
