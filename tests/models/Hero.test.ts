@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import { Hero } from '../../src/models/Hero';
 import { LooseObject } from '../../src/interface/LooseObject';
 import { Move } from '../../src/models/Move';
-import { EffectTurn } from '../../src/models/EffectTurn';
 import { IAbstractTurn } from '../../src/interface/IAbstractTurn';
+import 'mocha';
 
 describe('Hero', () => {
   it('wraps a raw object as a hero', () => {
