@@ -82,12 +82,14 @@ export class TurnManager implements ITurnManager {
   private arenaManager : IArenaManager;
   private cpuManager : ICPUManager;
   private turnQueue : TurnQueue;
+  private multiMode : boolean;
 
-  constructor(teamManager : ITeamManager, arenaManager : IArenaManager, cpuManager : ICPUManager) {
+  constructor(teamManager : ITeamManager, arenaManager : IArenaManager, cpuManager : ICPUManager, multiMode : boolean = false) {
     this.teamManager = teamManager;
     this.arenaManager = arenaManager;
     this.cpuManager = cpuManager;
     this.turnQueue = new TurnQueue(teamManager);
+    this.multiMode = multiMode;
   }
 
   /**
@@ -109,7 +111,7 @@ export class TurnManager implements ITurnManager {
         break;
       }
       if (this.teamManager.getActiveEnemyHero().getHealth() === 0) {
-        this.addCPUTurn()
+        this.addCPUTurn();
       }
       if (this.teamManager.getActivePlayerHero().getHealth() === 0) {
         break;
@@ -141,18 +143,14 @@ export class TurnManager implements ITurnManager {
     if (playerWin) {
       actionLog.push({
         type: 'Win',
-        result: {
-          side: 'player'
-        }
+        result: { side: 'player' }
       })
       return true;
     }
     if (enemyWin) {
       actionLog.push({
         type: 'Win',
-        result: {
-          side: 'enemy'
-        }
+        result: { side: 'enemy' }
       })
       return true;
     }
@@ -197,9 +195,18 @@ export class TurnManager implements ITurnManager {
    */
   public addCPUTurn() {
     if (this.cpuManager) {
-      const cpuTurn : IAbstractTurn = this.cpuManager.getCPUTurn(this.arenaManager, this.teamManager);
-      if (cpuTurn) {
-        this.turnQueue.enqueueTurn(cpuTurn);
+      if (this.multiMode) {
+        const cpuTurns : IAbstractTurn[] = this.cpuManager.getCPUTurns(this.arenaManager, this.teamManager);
+        cpuTurns.forEach((turn : IAbstractTurn) => {
+          if (turn) {
+            this.turnQueue.enqueueTurn(turn);
+          }
+        })
+      } else {
+        const cpuTurn : IAbstractTurn = this.cpuManager.getCPUTurn(this.arenaManager, this.teamManager);
+        if (cpuTurn) {
+          this.turnQueue.enqueueTurn(cpuTurn);
+        }
       }
     }
   }

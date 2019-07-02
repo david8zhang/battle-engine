@@ -269,4 +269,84 @@ describe('BattleManager', () => {
       expect(actionLog.length).to.be.greaterThan(1);
     })
   })
+
+  describe('Multi mode support', () => {
+    it('has working multi-attack logic', () => {
+      const configClone = cloneObject(sampleConfig);
+      const sampleMoveSet : LooseObject[] = [
+        { name: 'Move1', power: 10, priority: 0 },
+        { name: 'Move2', power: 10, priority: 0 }
+      ]
+      const effects : LooseObject[] = [];
+      const activePlayerTeam = {
+        '1': { name: 'mario', attack: 10, defense: 10, health: 4, speed: 10, heroId: '1', effects, moveSet: sampleMoveSet },
+        '2': { name: 'link', attack: 10, defense: 10, health: 4, speed: 8, heroId: '2', effects, moveSet: sampleMoveSet },
+      }
+      const activeEnemyTeam = {
+        '3': { name: 'bowser', attack: 10, defense: 10, health: 4, speed: 6, heroId: '3', effects, moveSet: sampleMoveSet },
+        '4': { name: 'ganondorf', attack: 10, defense: 10, health: 4, speed: 4, heroId: '4', effects, moveSet: sampleMoveSet },
+      }
+      configClone.playerTeam = activePlayerTeam;
+      configClone.enemyTeam = activeEnemyTeam;
+      configClone.multiMode = true;
+      const battleManager : BattleManager = new BattleManager(configClone);
+  
+      const actionLog = battleManager.doPlayerTurnMulti([{
+        actionType: 'ActionTurn',
+        move: sampleMoveSet[0],
+        sourceHeroId: '1',
+        targetHeroIds: ['3'],
+        priority: sampleMoveSet[0].priority
+      }, {
+        actionType: 'ActionTurn',
+        move: sampleMoveSet[1],
+        sourceHeroId: '2',
+        targetHeroIds: ['4'],
+        priority: sampleMoveSet[1].priority
+      }]);
+
+      const expectedActionLog = [{
+        type: 'Action',
+        message: 'mario used Move1 and dealt 2 to bowser',
+        result: {
+          damage: 2,
+          move: 'Move1',
+          targetHeroId: '3',
+          sourceHeroId: '1'
+        }
+      }, {
+        type: 'Action',
+        message: 'link used Move2 and dealt 2 to ganondorf',
+        result: {
+          damage: 2,
+          move: 'Move2',
+          targetHeroId: '4',
+          sourceHeroId: '2'
+        }
+      }, {
+        type: 'Action',
+        message: 'bowser used Move1 and dealt 2 to mario',
+        result: {
+          damage: 2,
+          move: 'Move1',
+          targetHeroId: '1',
+          sourceHeroId: '3'
+        }
+      }, {
+        type: 'Action',
+        message: 'ganondorf used Move1 and dealt 2 to link',
+        result: {
+          damage: 2,
+          move: 'Move2',
+          targetHeroId: '2',
+          sourceHeroId: '4'
+        }
+      }]
+      expect(actionLog).to.deep.equal(expectedActionLog);
+      expect(battleManager.getActivePlayerTeam()['1'].health).to.equal(activePlayerTeam['1'].health - 2);
+      expect(battleManager.getActivePlayerTeam()['2'].health).to.equal(activePlayerTeam['2'].health - 2);
+      expect(battleManager.getActiveEnemyTeam()['3'].health).to.equal(activeEnemyTeam['3'].health - 2);
+      expect(battleManager.getActiveEnemyTeam()['4'].health).to.equal(activeEnemyTeam['4'].health - 2);
+    })
+  })
 })

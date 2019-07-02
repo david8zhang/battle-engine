@@ -19,18 +19,30 @@ export class BattleManager implements IBattleManager {
   private arenaManager : IArenaManager;
   private turnManager : ITurnManager;
   private cpuManager : ICPUManager;
+  private multiMode : boolean;
 
   constructor(battleConfig : LooseObject) {
     this.teamManager = new TeamManager(battleConfig);
     this.arenaManager = new ArenaManager(battleConfig);
     this.cpuManager = new CPUManager(battleConfig);
-    this.turnManager = new TurnManager(this.teamManager, this.arenaManager, this.cpuManager);
+    this.multiMode = battleConfig.multiMode ? battleConfig.multiMode : false;
+    this.turnManager = new TurnManager(this.teamManager, this.arenaManager, this.cpuManager, this.multiMode);
   }
 
   public doPlayerTurn(playerInput : LooseObject) : LooseObject[] {
     this.turnManager.addPlayerTurn(playerInput);
     const actionLog : LooseObject[] = this.turnManager.processTurnQueue();
     return actionLog;
+  }
+
+  public doPlayerTurnMulti(playerInputs : LooseObject[]) : LooseObject[] {
+    if (!this.multiMode) {
+      console.error('You must turn on multi mode in order to support multiple player actions!');
+      return null;
+    } else {
+      playerInputs.forEach((turn : LooseObject) => { this.turnManager.addPlayerTurn(turn) })
+      return this.turnManager.processTurnQueue();
+    }
   }
 
   public getEnemyTeam() {
@@ -40,6 +52,14 @@ export class BattleManager implements IBattleManager {
   public getPlayerTeam() {
     return this.deserializeTeam(this.teamManager.getPlayerTeam());
   }
+
+  public getActivePlayerTeam() {
+    return this.deserializeTeam(this.teamManager.getActivePlayerTeam());
+  }
+
+  public getActiveEnemyTeam() {
+    return this.deserializeTeam(this.teamManager.getActiveEnemyTeam());
+  };
 
   public getActivePlayerHero() {
     return this.deserializeHero(this.teamManager.getActivePlayerHero());
