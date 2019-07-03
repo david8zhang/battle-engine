@@ -92,6 +92,18 @@ export class TeamManager implements ITeamManager {
     return null;
   }
 
+  public getHeroes(ids : string[]) : Hero[] {
+    let result : Hero[] = [];
+    ids.forEach((id : string) => {
+      if (this.enemyTeam[id]) {
+        result.push(this.enemyTeam[id]);
+      } else if (this.playerTeam[id]) {
+        result.push(this.playerTeam[id]);
+      }
+    })
+    return result;
+  }
+
   private convertToHeroes(team : LooseObject) : LooseObject {
     if (!team) {
       return {};

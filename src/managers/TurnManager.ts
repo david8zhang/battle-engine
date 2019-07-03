@@ -97,11 +97,15 @@ export class TurnManager implements ITurnManager {
    * (to show to the UI)
    */
   public processTurnQueue() : LooseObject[] {
-    this.addEffectsToQueue();
+    // Different setup for different modes
+    if (!this.multiMode) {
+      this.addEffectsToQueue();
+    } else {
+      this.addMultiEffectsToQueue();
+    }
     if (this.cpuManager) {
       this.addCPUTurn();
     }
-
     let actionLog : LooseObject[] = [];
     while (this.turnQueue.size() > 0) {
       const turnToProcess = this.turnQueue.dequeueTurn();
@@ -110,11 +114,20 @@ export class TurnManager implements ITurnManager {
       if (this.checkWinCondition(actionLog)) {
         break;
       }
-      if (this.teamManager.getActiveEnemyHero().getHealth() === 0) {
-        this.addCPUTurn();
-      }
-      if (this.teamManager.getActivePlayerHero().getHealth() === 0) {
-        break;
+
+      if (!this.multiMode) {
+        if (this.teamManager.getActiveEnemyHero().getHealth() === 0) {
+          this.addCPUTurn();
+        }
+        if (this.teamManager.getActivePlayerHero().getHealth() === 0) {
+          break;
+        }
+      } else {
+        if (this.teamManager.getActiveEnemyTeam().find((h : Hero) => h.getHealth() === 0)) {
+          this.addCPUTurn()
+        } else if (this.teamManager.getActivePlayerTeam().find((h : Hero) => h.getHealth() === 0)) {
+          break;
+        }
       }
     }
     return actionLog.filter((action) => action !== null);
@@ -177,6 +190,20 @@ export class TurnManager implements ITurnManager {
     if (arenaEffects.length > 0) this.turnQueue.enqueueTurns(arenaEffects);
     if (activeEnemyHeroEffects.length > 0) this.turnQueue.enqueueTurns(activeEnemyHeroEffects);
     if (activePlayerHeroEffects.length > 0) this.turnQueue.enqueueTurns(activePlayerHeroEffects);
+  }
+
+  private addMultiEffectsToQueue() : void { 
+    const arenaEffects : IAbstractTurn[] = this.arenaManager.getHazards().filter((effect : EffectTurn) => effect.duration > 0);
+    if (arenaEffects.length > 0) {
+      this.turnQueue.enqueueTurns(arenaEffects);
+    }
+    const activePlayerTeam = this.teamManager.getActivePlayerTeam();
+    const activeEnemyTeam = this.teamManager.getActiveEnemyTeam();
+    const combinedTeams : Hero[] = activePlayerTeam.concat(activeEnemyTeam);
+    combinedTeams.forEach((hero : Hero) => {
+      const effects = hero.getEffects().filter((effect : EffectTurn) => effect.duration > 0);
+      if (effects.length > 0) this.turnQueue.enqueueTurns(effects);
+    })
   }
 
 

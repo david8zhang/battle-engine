@@ -279,12 +279,12 @@ describe('BattleManager', () => {
       ]
       const effects : LooseObject[] = [];
       const activePlayerTeam = {
-        '1': { name: 'mario', attack: 10, defense: 10, health: 4, speed: 10, heroId: '1', effects, moveSet: sampleMoveSet },
-        '2': { name: 'link', attack: 10, defense: 10, health: 4, speed: 8, heroId: '2', effects, moveSet: sampleMoveSet },
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 4, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 4, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
       }
       const activeEnemyTeam = {
-        '3': { name: 'bowser', attack: 10, defense: 10, health: 4, speed: 6, heroId: '3', effects, moveSet: sampleMoveSet },
-        '4': { name: 'ganondorf', attack: 10, defense: 10, health: 4, speed: 4, heroId: '4', effects, moveSet: sampleMoveSet },
+        'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 4, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
+        'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 4, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
       }
       configClone.playerTeam = activePlayerTeam;
       configClone.enemyTeam = activeEnemyTeam;
@@ -294,14 +294,14 @@ describe('BattleManager', () => {
       const actionLog = battleManager.doPlayerTurnMulti([{
         actionType: 'ActionTurn',
         move: sampleMoveSet[0],
-        sourceHeroId: '1',
-        targetHeroIds: ['3'],
+        sourceHeroId: 'mario-id',
+        targetHeroIds: ['bowser-id'],
         priority: sampleMoveSet[0].priority
       }, {
         actionType: 'ActionTurn',
         move: sampleMoveSet[1],
-        sourceHeroId: '2',
-        targetHeroIds: ['4'],
+        sourceHeroId: 'link-id',
+        targetHeroIds: ['ganondorf-id'],
         priority: sampleMoveSet[1].priority
       }]);
 
@@ -311,8 +311,8 @@ describe('BattleManager', () => {
         result: {
           damage: 2,
           move: 'Move1',
-          targetHeroId: '3',
-          sourceHeroId: '1'
+          targetHeroId: 'bowser-id',
+          sourceHeroId: 'mario-id'
         }
       }, {
         type: 'Action',
@@ -320,33 +320,15 @@ describe('BattleManager', () => {
         result: {
           damage: 2,
           move: 'Move2',
-          targetHeroId: '4',
-          sourceHeroId: '2'
-        }
-      }, {
-        type: 'Action',
-        message: 'bowser used Move1 and dealt 2 to mario',
-        result: {
-          damage: 2,
-          move: 'Move1',
-          targetHeroId: '1',
-          sourceHeroId: '3'
-        }
-      }, {
-        type: 'Action',
-        message: 'ganondorf used Move1 and dealt 2 to link',
-        result: {
-          damage: 2,
-          move: 'Move2',
-          targetHeroId: '2',
-          sourceHeroId: '4'
+          targetHeroId: 'ganondorf-id',
+          sourceHeroId: 'link-id'
         }
       }]
-      expect(actionLog).to.deep.equal(expectedActionLog);
-      expect(battleManager.getActivePlayerTeam()['1'].health).to.equal(activePlayerTeam['1'].health - 2);
-      expect(battleManager.getActivePlayerTeam()['2'].health).to.equal(activePlayerTeam['2'].health - 2);
-      expect(battleManager.getActiveEnemyTeam()['3'].health).to.equal(activeEnemyTeam['3'].health - 2);
-      expect(battleManager.getActiveEnemyTeam()['4'].health).to.equal(activeEnemyTeam['4'].health - 2);
+      expect(actionLog[0]).to.deep.equal(expectedActionLog[0]);
+      expect(actionLog[1]).to.deep.equal(expectedActionLog[1]);
+      expect(actionLog.length).to.be.at.least(4);
+      expect(battleManager.getActiveEnemyTeam()[0].health).to.equal(activeEnemyTeam['bowser-id'].health - 2);
+      expect(battleManager.getActiveEnemyTeam()[1].health).to.equal(activeEnemyTeam['ganondorf-id'].health - 2);
     })
   })
 })

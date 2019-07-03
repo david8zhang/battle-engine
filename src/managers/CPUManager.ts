@@ -88,7 +88,7 @@ export class CPUManager implements ICPUManager {
         res.push(new ActionTurn({
           move: deserializedMove,
           sourceHeroId: enemy.getHeroId(),
-          targetHeroIds: activePlayerTeam[randomPlayerIndex].getHeroId(),
+          targetHeroIds: [activePlayerTeam[randomPlayerIndex].getHeroId()],
           priority: chosenMove.getPriority()
         }));
       }
