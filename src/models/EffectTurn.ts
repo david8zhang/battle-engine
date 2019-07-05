@@ -61,8 +61,6 @@ export class EffectTurn implements IAbstractTurn {
         })
       }
     })
-
-
     return effectLog;
   }
 }

@@ -489,7 +489,6 @@ describe('BattleManager', () => {
         });
       })
     })
-
     it('process effects that kill', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
@@ -551,6 +550,92 @@ describe('BattleManager', () => {
           targetHeroId: 'link-id'
         }
       })
+    })
+    it('processes effects over a duration', () => {
+      const configClone = cloneObject(sampleConfig);
+      const sampleMoveSet : LooseObject[] = [
+        { name: 'Move1', power: 0, priority: 0 },
+        { name: 'Move2', power: 0, priority: 0 }
+      ]
+      const defaultEffects : LooseObject[] = [];
+      const effects : LooseObject[] = [{
+        duration: 3,
+        name: 'Poison Effect',
+        priority: 0,
+        targetHeroes: ['link-id'],
+        effect: (heroes : LooseObject[]) : LooseObject[] => {
+          const actionLog : LooseObject[] = [];
+          heroes.forEach((h : LooseObject) => {
+            const newHealth = h.getHealth() - 1 > 0 ? h.getHealth() - 1 : 0
+            h.setHealth(newHealth);
+            actionLog.push({
+              type: 'Effect',
+              message:  `${h.getName()} took 1 damage from Poison Effect`,
+              result: {
+                hp: -1,
+                targetHeroId: h.getHeroId(),
+                effect: 'Poison Effect'
+              }
+            })
+          })
+          return actionLog;
+        }
+      }];
+      const activePlayerTeam = {
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 100, level: 1, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 100, level: 1, speed: 8, heroId: 'link-id', effects: defaultEffects, moveSet: sampleMoveSet },
+        'donkey-kong-id': { name: 'donkey-kong', attack: 10, defense: 10, health: 4, level: 1, speed: 4, heroId: 'donkey-kong-id', effects: defaultEffects, moveSet: sampleMoveSet }
+      }
+      const activeEnemyTeam = {
+        'bowser-id': { name: 'bowser', attack: 0, defense: 10, health: 4, level: 1, speed: 6, heroId: 'bowser-id', effects: defaultEffects, moveSet: sampleMoveSet },
+        'ganondorf-id': { name: 'ganondorf', attack: 0, defense: 10, health: 4, level: 1, speed: 4, heroId: 'ganondorf-id', effects: defaultEffects, moveSet: sampleMoveSet },
+      }
+      configClone.playerTeam = activePlayerTeam;
+      configClone.enemyTeam = activeEnemyTeam;
+      configClone.activePlayerTeam = ['mario-id', 'link-id'];
+      configClone.activeEnemyTeam = ['bowser-id', 'ganondorf-id'];
+      configClone.multiMode = true;
+      const battleManager : BattleManager = new BattleManager(configClone);
+
+
+      const marioAttackTurn = {
+        actionType: 'ActionTurn',
+        move: sampleMoveSet[0],
+        sourceHeroId: 'mario-id',
+        targetHeroIds: ['bowser-id'],
+        priority: sampleMoveSet[0].priority
+      }
+
+      const effectLogRecord = {
+        type: 'Effect',
+        message: 'link took 1 damage from Poison Effect',
+        result: {
+          hp: -1,
+          targetHeroId: 'link-id',
+          effect: 'Poison Effect'
+        }
+      }
+
+      // Do three turns
+      const actionLog1 = battleManager.doPlayerTurn(marioAttackTurn);
+      const effectsLog1 = actionLog1.filter((a : LooseObject) => a.type === 'Effect');
+      expect(effectsLog1.length).to.equal(1);
+      expect(effectsLog1[0]).to.deep.equal(effectLogRecord);
+
+      const actionLog2 = battleManager.doPlayerTurn(marioAttackTurn);
+      const effectsLog2 = actionLog2.filter((a : LooseObject) =>  a.type === 'Effect');
+      expect(effectsLog2.length).to.equal(1);
+      expect(effectsLog2[0]).to.deep.equal(effectLogRecord);
+
+      const actionLog3 = battleManager.doPlayerTurn(marioAttackTurn);
+      const effectsLog3 = actionLog3.filter((a : LooseObject) => a.type === 'Effect');
+      expect(effectsLog3.length).to.equal(1);
+      expect(effectsLog3[0]).to.deep.equal(effectLogRecord);
+
+      // Effect wears off after duration finishes
+      const actionLog4 = battleManager.doPlayerTurn(marioAttackTurn);
+      const effectsLog4 = actionLog4.filter((a : LooseObject) => a.type === 'Effect');
+      expect(effectsLog4.length).to.equal(0);
     })
   })
 })
