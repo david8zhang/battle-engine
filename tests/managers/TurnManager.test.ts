@@ -511,27 +511,11 @@ describe('Turn Manager', () => {
         }
       }, {
         type: 'Effect',
-        message: 'enemy2 took 10 damage from Poison Effect',
-        result: {
-          hp: -10,
-          effect: 'Poison Effect',
-          targetHeroId: '4'
-        }
-      }, {
-        type: 'Effect',
         message: 'hero1 healed 10 hp from Healing Effect',
         result: {
           hp: 10,
           effect: 'Healing Effect',
           targetHeroId: '1'
-        }
-      }, {
-        type: 'Effect',
-        message: 'hero2 healed 10 hp from Healing Effect',
-        result: {
-          hp: 10,
-          effect: 'Healing Effect',
-          targetHeroId: '2'
         }
       }];
       const teamManager = new TeamManager(configClone);
@@ -541,9 +525,7 @@ describe('Turn Manager', () => {
       const actionLog : LooseObject[] = turnManager.processTurnQueue();
       expect(actionLog).to.deep.equal(expectedActionLog);
       expect(teamManager.getHero('1').getHealth()).to.equal(110);
-      expect(teamManager.getHero('2').getHealth()).to.equal(160);
       expect(teamManager.getHero('3').getHealth()).to.equal(90);
-      expect(teamManager.getHero('4').getHealth()).to.equal(140);
     });
 
     it('applies effects to dead heroes correctly', () => {
@@ -554,8 +536,7 @@ describe('Turn Manager', () => {
         '2': { name: 'hero2', attack: 10, defense: 10, health: 50, speed: 25, heroId: '2', effects: [] }
       }
       const enemyTeam : LooseObject = {
-        '3': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '3', effects: [] },
-        '4': { name: 'enemy2', attack: 10, defense: 10, health: 0, speed: 50, heroId: '4', effects: [] },
+        '3': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '3', effects: [] }
       }
       configClone.playerTeam = playerTeam;
       configClone.enemyTeam = enemyTeam;
@@ -575,21 +556,12 @@ describe('Turn Manager', () => {
           targetHeroId: '1',
           effect: 'Healing Effect'
         }
-      }, {
-        type: 'Effect',
-        message: 'hero2 healed 10 hp from Healing Effect',
-        result: {
-          hp: 10,
-          targetHeroId: '2',
-          effect: 'Healing Effect'
-        }
       }];
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
       const turnManager = new TurnManager(teamManager, arenaManager, null);
       const actionLog : LooseObject[] = turnManager.processTurnQueue();
       expect(actionLog).to.deep.equal(expectedActionLog);
-      expect(teamManager.getHero('4').getHealth()).to.equal(0);
     })
 
     it('does not apply effects to heroes that do not exist', () => {
@@ -621,29 +593,23 @@ describe('Turn Manager', () => {
         '2': { name: 'hero2', attack: 10, defense: 10, health: 50, speed: 25, heroId: '2', effects: [] }
       }
       const enemyTeam : LooseObject = {
-        '3': { name: 'enemy1', attack: 10, defense: 10, health: 100, speed: 50, heroId: '3', effects: [] },
-        '4': { name: 'enemy2', attack: 10, defense: 10, health: 0, speed: 10, heroId: '4', effects: [] },
+        '3': { name: 'enemy1', attack: 10, defense: 10, health: 10, speed: 50, heroId: '3', effects: [] },
+        '4': { name: 'enemy2', attack: 10, defense: 10, health: 10, speed: 10, heroId: '4', effects: [] },
       }
       configClone.playerTeam = playerTeam;
       configClone.enemyTeam = enemyTeam;
+      configClone.activeEnemyHero = '3';
+      configClone.activePlayerHero = '1';
       const teamManager = new TeamManager(configClone);
       const arenaManager = new ArenaManager(configClone);
       const turnManager = new TurnManager(teamManager, arenaManager, null);
 
-      // process once
+      // process once - enemy1 is killed
       turnManager.processTurnQueue();
 
-      // process twice - enemy2 should now be dead
+      // process twice - enemy1 should be dead aready, no more effect
       const actionLog : LooseObject[] = turnManager.processTurnQueue();
       const expectedActionLog = [{
-        type: 'Effect',
-        message: 'enemy1 took 10 damage from Poison Effect',
-        result: {
-          hp: -10,
-          effect: 'Poison Effect',
-          targetHeroId: '3'
-        }
-      }, {
         type: 'Effect',
         message: 'hero1 healed 10 hp from Healing Effect',
         result: {
@@ -651,17 +617,9 @@ describe('Turn Manager', () => {
           effect: 'Healing Effect',
           targetHeroId: '1'
         }
-      }, {
-        type: 'Effect',
-        message: 'hero2 healed 10 hp from Healing Effect',
-        result: {
-          hp: 10,
-          effect: 'Healing Effect',
-          targetHeroId: '2'
-        }
       }];
       expect(actionLog).to.deep.equal(expectedActionLog);
-      expect(teamManager.getHero('4').getHealth()).to.equal(0);
+      expect(teamManager.getHero('3').getHealth()).to.equal(0);
     })
 
     it('handles effect durations correctly', () => {
@@ -695,14 +653,6 @@ describe('Turn Manager', () => {
           hp: 10,
           effect: 'Healing Effect',
           targetHeroId: '1'
-        }
-      }, {
-        type: 'Effect',
-        message: 'hero2 healed 10 hp from Healing Effect',
-        result: {
-          hp: 10,
-          effect: 'Healing Effect',
-          targetHeroId: '2'
         }
       }];
       expect(noPoisonLog).to.deep.equal(expectedActionLog);

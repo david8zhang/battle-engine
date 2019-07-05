@@ -96,14 +96,16 @@ export class CPUManager implements ICPUManager {
     return res;
   }
 
-  private defaultMultiSwitchCalculator(enemyTeam : LooseObject, playerTeam : LooseObject) : IAbstractTurn[] {
+  private defaultMultiSwitchCalculator(enemyTeam : LooseObject, playerTeam : LooseObject, activeEnemyTeam: Hero[]) : IAbstractTurn[] {
     const newActiveEnemyTeam : string[] = [];
+    let ctr = 0;
     Object.keys(enemyTeam).forEach((id) => {
-      if (enemyTeam[id].getHealth() > 0) {
+      if (enemyTeam[id].getHealth() > 0 && ctr < activeEnemyTeam.length) {
         newActiveEnemyTeam.push(id);
+        ctr++;
       }
     })
-    return [new MultiSwitchTurn({ newActiveTeam: newActiveEnemyTeam, side: 'enemy '})];
+    return [new MultiSwitchTurn({ newActiveTeam: newActiveEnemyTeam, side: 'enemy' })];
   }
 
 
@@ -149,7 +151,7 @@ export class CPUManager implements ICPUManager {
       if (this.multiSwitchCalculator) {
         return [new MultiSwitchTurn(this.multiSwitchCalculator(params))];
       } else {
-        return this.defaultMultiSwitchCalculator(enemyTeam, playerTeam);
+        return this.defaultMultiSwitchCalculator(enemyTeam, playerTeam, activeEnemyTeam);
       }
     } else {
       if (this.multiMoveCalculator) {

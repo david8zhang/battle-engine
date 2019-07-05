@@ -78,8 +78,14 @@ export class TeamManager implements ITeamManager {
   public setActiveEnemyHero(newActiveHeroId : string) : void { this.activeEnemyHero = newActiveHeroId; }
 
   // Multi mode logic
-  public getActivePlayerTeam() : Hero[] { return this.activePlayerTeam.map((heroId : string) => this.playerTeam[heroId]) }
-  public getActiveEnemyTeam() : Hero[] { return this.activeEnemyTeam.map((heroId : string) => this.enemyTeam[heroId] )}
+  public getActivePlayerTeam() : Hero[] { {
+    if (!this.activePlayerTeam) { return [] }
+    return this.activePlayerTeam.map((heroId : string) => this.playerTeam[heroId])
+  }}
+  public getActiveEnemyTeam() : Hero[] {
+    if (!this.activeEnemyTeam) { return [] }
+    return this.activeEnemyTeam.map((heroId : string) => this.enemyTeam[heroId] )
+  }
   public setActivePlayerTeam(heroIds : string[]) : void { this.activePlayerTeam = heroIds; }
   public setActiveEnemyTeam(heroIds : string[]) : void { this.activeEnemyTeam = heroIds; }
 

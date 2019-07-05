@@ -8,13 +8,15 @@ import { IAbstractTurn } from "../interface/IAbstractTurn";
 import { EffectTurn } from '../models/EffectTurn';
 import { ActionTurn } from '../models/ActionTurn';
 import { SwitchTurn } from '../models/SwitchTurn';
+import { MultiSwitchTurn } from '../models/MultiSwitchTurn';
 import { ICPUManager } from "../interface/ICPUManager";
 import { Hero } from "../models/Hero";
 
 const TurnFactory : LooseObject = {
   ActionTurn,
   EffectTurn,
-  SwitchTurn
+  SwitchTurn,
+  MultiSwitchTurn
 }
 
 export class TurnQueue {
@@ -111,6 +113,7 @@ export class TurnManager implements ITurnManager {
       const turnToProcess = this.turnQueue.dequeueTurn();
       const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
       actionLog = actionLog.concat(actions);
+
       if (this.checkWinCondition(actionLog)) {
         break;
       }
