@@ -42,15 +42,25 @@ export class TeamManager implements ITeamManager {
   private playerTeam : LooseObject;
   private enemyTeam : LooseObject;
 
+  private activePlayerTeam : string[];
+  private activeEnemyTeam : string[];
+
   constructor(battleConfig : LooseObject) {
+
     if (battleConfig.playerTeam) this.playerTeam = this.convertToHeroes(battleConfig.playerTeam);
     if (battleConfig.enemyTeam) this.enemyTeam = this.convertToHeroes(battleConfig.enemyTeam);
    
     if (!this.playerTeam) this.playerTeam = randomGenerator('Player');
     if (!this.enemyTeam) this.enemyTeam = randomGenerator('Enemy');
 
-    this.activePlayerHero = battleConfig.activePlayerHero || Object.keys(this.playerTeam)[0];
-    this.activeEnemyHero = battleConfig.activeEnemyHero || Object.keys(this.enemyTeam)[0];
+
+    if (battleConfig.multiMode) {
+      this.activePlayerTeam = battleConfig.activePlayerTeam || Object.keys(this.playerTeam).slice(0, 3);
+      this.activeEnemyTeam = battleConfig.activeEnemyTeam || Object.keys(this.enemyTeam).slice(0, 3);
+    } else {
+      this.activePlayerHero = battleConfig.activePlayerHero || Object.keys(this.playerTeam)[0];
+      this.activeEnemyHero = battleConfig.activeEnemyHero || Object.keys(this.enemyTeam)[0];
+    }
   }
 
   public getEnemyTeam() : LooseObject {
@@ -61,21 +71,23 @@ export class TeamManager implements ITeamManager {
     return this.playerTeam;
   }
 
-  public getActivePlayerHero() : Hero {
-    return this.playerTeam[this.activePlayerHero];
-  }
+  // Single hero logic
+  public getActivePlayerHero() : Hero { return this.playerTeam[this.activePlayerHero]; }
+  public getActiveEnemyHero() : Hero { return this.enemyTeam[this.activeEnemyHero]; }
+  public setActivePlayerHero(newActiveHeroId : string) : void { this.activePlayerHero = newActiveHeroId; }
+  public setActiveEnemyHero(newActiveHeroId : string) : void { this.activeEnemyHero = newActiveHeroId; }
 
-  public getActiveEnemyHero() : Hero {
-    return this.enemyTeam[this.activeEnemyHero];
+  // Multi mode logic
+  public getActivePlayerTeam() : Hero[] { {
+    if (!this.activePlayerTeam) { return [] }
+    return this.activePlayerTeam.map((heroId : string) => this.playerTeam[heroId])
+  }}
+  public getActiveEnemyTeam() : Hero[] {
+    if (!this.activeEnemyTeam) { return [] }
+    return this.activeEnemyTeam.map((heroId : string) => this.enemyTeam[heroId] )
   }
-
-  public setActivePlayerHero(newActiveHeroId : string) : void {
-    this.activePlayerHero = newActiveHeroId;
-  }
-
-  public setActiveEnemyHero(newActiveHeroId : string) : void {
-    this.activeEnemyHero = newActiveHeroId;
-  }
+  public setActivePlayerTeam(heroIds : string[]) : void { this.activePlayerTeam = heroIds; }
+  public setActiveEnemyTeam(heroIds : string[]) : void { this.activeEnemyTeam = heroIds; }
 
   public getHero(id : string) : Hero {
     if (this.enemyTeam[id]) {
@@ -84,6 +96,18 @@ export class TeamManager implements ITeamManager {
       return this.playerTeam[id];
     }
     return null;
+  }
+
+  public getHeroes(ids : string[]) : Hero[] {
+    let result : Hero[] = [];
+    ids.forEach((id : string) => {
+      if (this.enemyTeam[id]) {
+        result.push(this.enemyTeam[id]);
+      } else if (this.playerTeam[id]) {
+        result.push(this.playerTeam[id]);
+      }
+    })
+    return result;
   }
 
   private convertToHeroes(team : LooseObject) : LooseObject {

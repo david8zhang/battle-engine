@@ -8,13 +8,15 @@ import { IAbstractTurn } from "../interface/IAbstractTurn";
 import { EffectTurn } from '../models/EffectTurn';
 import { ActionTurn } from '../models/ActionTurn';
 import { SwitchTurn } from '../models/SwitchTurn';
+import { MultiSwitchTurn } from '../models/MultiSwitchTurn';
 import { ICPUManager } from "../interface/ICPUManager";
 import { Hero } from "../models/Hero";
 
 const TurnFactory : LooseObject = {
   ActionTurn,
   EffectTurn,
-  SwitchTurn
+  SwitchTurn,
+  MultiSwitchTurn
 }
 
 export class TurnQueue {
@@ -82,12 +84,14 @@ export class TurnManager implements ITurnManager {
   private arenaManager : IArenaManager;
   private cpuManager : ICPUManager;
   private turnQueue : TurnQueue;
+  private multiMode : boolean;
 
-  constructor(teamManager : ITeamManager, arenaManager : IArenaManager, cpuManager : ICPUManager) {
+  constructor(teamManager : ITeamManager, arenaManager : IArenaManager, cpuManager : ICPUManager, multiMode : boolean = false) {
     this.teamManager = teamManager;
     this.arenaManager = arenaManager;
     this.cpuManager = cpuManager;
     this.turnQueue = new TurnQueue(teamManager);
+    this.multiMode = multiMode;
   }
 
   /**
@@ -95,24 +99,38 @@ export class TurnManager implements ITurnManager {
    * (to show to the UI)
    */
   public processTurnQueue() : LooseObject[] {
-    this.addEffectsToQueue();
+    // Different setup for different modes
+    if (!this.multiMode) {
+      this.addEffectsToQueue();
+    } else {
+      this.addMultiEffectsToQueue();
+    }
     if (this.cpuManager) {
       this.addCPUTurn();
     }
-
     let actionLog : LooseObject[] = [];
     while (this.turnQueue.size() > 0) {
       const turnToProcess = this.turnQueue.dequeueTurn();
       const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
       actionLog = actionLog.concat(actions);
+
       if (this.checkWinCondition(actionLog)) {
         break;
       }
-      if (this.teamManager.getActiveEnemyHero().getHealth() === 0) {
-        this.addCPUTurn()
-      }
-      if (this.teamManager.getActivePlayerHero().getHealth() === 0) {
-        break;
+
+      if (!this.multiMode) {
+        if (this.teamManager.getActiveEnemyHero().getHealth() === 0) {
+          this.addCPUTurn();
+        }
+        if (this.teamManager.getActivePlayerHero().getHealth() === 0) {
+          break;
+        }
+      } else {
+        if (this.teamManager.getActiveEnemyTeam().find((h : Hero) => h.getHealth() === 0)) {
+          this.addCPUTurn()
+        } else if (this.teamManager.getActivePlayerTeam().find((h : Hero) => h.getHealth() === 0)) {
+          break;
+        }
       }
     }
     return actionLog.filter((action) => action !== null);
@@ -141,18 +159,14 @@ export class TurnManager implements ITurnManager {
     if (playerWin) {
       actionLog.push({
         type: 'Win',
-        result: {
-          side: 'player'
-        }
+        result: { side: 'player' }
       })
       return true;
     }
     if (enemyWin) {
       actionLog.push({
         type: 'Win',
-        result: {
-          side: 'enemy'
-        }
+        result: { side: 'enemy' }
       })
       return true;
     }
@@ -181,6 +195,20 @@ export class TurnManager implements ITurnManager {
     if (activePlayerHeroEffects.length > 0) this.turnQueue.enqueueTurns(activePlayerHeroEffects);
   }
 
+  private addMultiEffectsToQueue() : void { 
+    const arenaEffects : IAbstractTurn[] = this.arenaManager.getHazards().filter((effect : EffectTurn) => effect.duration > 0);
+    if (arenaEffects.length > 0) {
+      this.turnQueue.enqueueTurns(arenaEffects);
+    }
+    const activePlayerTeam = this.teamManager.getActivePlayerTeam();
+    const activeEnemyTeam = this.teamManager.getActiveEnemyTeam();
+    const combinedTeams : Hero[] = activePlayerTeam.concat(activeEnemyTeam);
+    combinedTeams.forEach((hero : Hero) => {
+      const effects = hero.getEffects().filter((effect : EffectTurn) => effect.duration > 0);
+      if (effects.length > 0) this.turnQueue.enqueueTurns(effects);
+    })
+  }
+
 
   /**
    * addPlayerTurn - add a new turn inputted by the player
@@ -197,9 +225,18 @@ export class TurnManager implements ITurnManager {
    */
   public addCPUTurn() {
     if (this.cpuManager) {
-      const cpuTurn : IAbstractTurn = this.cpuManager.getCPUTurn(this.arenaManager, this.teamManager);
-      if (cpuTurn) {
-        this.turnQueue.enqueueTurn(cpuTurn);
+      if (this.multiMode) {
+        const cpuTurns : IAbstractTurn[] = this.cpuManager.getCPUTurns(this.arenaManager, this.teamManager);
+        cpuTurns.forEach((turn : IAbstractTurn) => {
+          if (turn) {
+            this.turnQueue.enqueueTurn(turn);
+          }
+        })
+      } else {
+        const cpuTurn : IAbstractTurn = this.cpuManager.getCPUTurn(this.arenaManager, this.teamManager);
+        if (cpuTurn) {
+          this.turnQueue.enqueueTurn(cpuTurn);
+        }
       }
     }
   }

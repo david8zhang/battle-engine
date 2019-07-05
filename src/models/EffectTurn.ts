@@ -20,15 +20,47 @@ export class EffectTurn implements IAbstractTurn {
     if (config.effect) this.effect = config.effect;
   }
 
+  private _checkHeroActive(id : string, teamManager : ITeamManager) : boolean {
+    const enemyTeamIds = teamManager.getActiveEnemyTeam() ? teamManager.getActiveEnemyTeam().map((h : Hero) => h.getHeroId()) : [];
+    const enemyId = teamManager.getActiveEnemyHero() ? teamManager.getActiveEnemyHero().getHeroId() : '';
+
+    const playerTeamIds = teamManager.getActivePlayerTeam() ? teamManager.getActivePlayerTeam().map((h : Hero) => h.getHeroId()) : [];
+    const playerId = teamManager.getActivePlayerHero() ? teamManager.getActivePlayerHero().getHeroId() : '';
+
+    return (
+      id === enemyId ||
+      enemyTeamIds.indexOf(id) !== -1 ||
+      id === playerId ||
+      playerTeamIds.indexOf(id) !== -1
+    );
+  }
+
   public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : LooseObject[] {
     const targets : Hero[] = [];
+
     this.targetHeroes.forEach((id : string) => {
       const hero = teamManager.getHero(id);
-      if (hero && hero.getHealth() > 0) {
-        targets.push(teamManager.getHero(id));        
+      if (this._checkHeroActive(id, teamManager) && hero && hero.getHealth() > 0) {
+        targets.push(teamManager.getHero(id));
       }
     })
+    
+    const affectedTargetIds = targets.map((hero : Hero) => hero.getHeroId());
     this.duration = this.duration - 1;
-    return this.effect(targets, arenaManager);
+    const effectLog = this.effect(targets, arenaManager);
+
+
+    // Check if any are dead
+    this.targetHeroes.forEach((id : string) => {
+      const hero = teamManager.getHero(id);
+      if (affectedTargetIds.indexOf(id) !== -1 && hero && hero.getHealth() <= 0) {
+        effectLog.push({
+          type: 'Death',
+          message: `${hero.getName()} died!`,
+          result: { targetHeroId: id }
+        })
+      }
+    })
+    return effectLog;
   }
 }

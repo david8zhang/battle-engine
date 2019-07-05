@@ -3,5 +3,6 @@ import { ITeamManager } from "./ITeamManager";
 import { IAbstractTurn } from "./IAbstractTurn";
 
 export interface ICPUManager {
-  getCPUTurn(arenaManager : IArenaManager, teamManager : ITeamManager) : IAbstractTurn
+  getCPUTurn(arenaManager : IArenaManager, teamManager : ITeamManager) : IAbstractTurn;
+  getCPUTurns(arenaManager : IArenaManager, teamManager : ITeamManager) : IAbstractTurn[];
 }
