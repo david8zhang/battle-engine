@@ -75,7 +75,9 @@ export class BattleManager implements IBattleManager {
       return {
         name: m.getName(),
         power: m.getPower(),
-        priority: m.getPriority()
+        priority: m.getPriority(),
+        healAmt: m.getHealAmt(),
+        isHeal: m.getIsHeal()
       }
     })
   }
@@ -97,6 +99,7 @@ export class BattleManager implements IBattleManager {
       defense: hero.getDefense(),
       speed: hero.getSpeed(),
       level: hero.getLevel(),
+      maxHealth: hero.getMaxHealth(),
       heroId: hero.getHeroId(),
       effects: hero.getEffects(),
       moveSet: this.deserializeMoves(hero.getMoveSet())

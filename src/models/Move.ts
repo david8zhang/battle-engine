@@ -5,11 +5,17 @@ export class Move {
   private name : string = '';
   private power : number = 0;
   private priority : number = 0;
+  private isHeal : boolean = false
+  private healAmt : number = 0;
+  private customDamageCalculator : Function;
 
   constructor(config : LooseObject) {
     if (config.name) this.name = config.name;
     if (config.power) this.power = config.power;
     if (config.priority) this.priority = config.priority;
+    if (config.isHeal) this.isHeal = config.isHeal
+    if (config.healAmt) this.healAmt = config.healAmt
+    if (config.customDamageCalculator) this.customDamageCalculator = config.customDamageCalculator
   }
 
   public getPower() : number {
@@ -36,7 +42,34 @@ export class Move {
     this.name = name;
   }
 
+  public getIsHeal() : boolean {
+    return this.isHeal
+  }
+
+  public setIsHeal(isHeal : boolean) {
+    this.isHeal = isHeal
+  }
+
+  public getHealAmt() : number {
+    return this.healAmt;
+  }
+
+  public setHealAmt(healAmt : number) : void {
+    this.healAmt = healAmt
+  }
+  
+  public calculateHealing(sourceHero : Hero, targetHero : Hero) : number {
+    const rawHealAmt = Math.floor(targetHero.getMaxHealth() * this.healAmt)
+    if (rawHealAmt + targetHero.getHealth() > targetHero.getMaxHealth()) {
+      return targetHero.getMaxHealth() - targetHero.getHealth()
+    }
+    return rawHealAmt
+  }
+
   public calculateDamage(sourceHero : Hero, targetHero : Hero) : number {
+    if (this.customDamageCalculator) {
+      return this.customDamageCalculator(sourceHero, targetHero)
+    }
     const attackDefenseRatio : number = sourceHero.getAttack() / targetHero.getDefense();
     const levelModifier : number = ((2.0 * sourceHero.getLevel()) / 5.0) + 2;
     let damage = ((levelModifier * this.power * attackDefenseRatio / 50) + 2)

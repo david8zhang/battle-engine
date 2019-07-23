@@ -335,21 +335,21 @@ describe('BattleManager', () => {
     it('correctly handles multi switch logic', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
-        { name: 'Move1', power: 10, priority: 0 },
-        { name: 'Move2', power: 10, priority: 0 }
+        { name: 'Move1', power: 10, priority: 0, isHeal: false, healAmt: 0 },
+        { name: 'Move2', power: 10, priority: 0, isHeal: false, healAmt: 0 }
       ]
       const effects : LooseObject[] = [];
       const playerTeam = {
-        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 4, level: 1, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
-        'link-id': { name: 'link', attack: 10, defense: 10, health: 4, level: 1, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
-        'pikachu-id': { name: 'pikachu', attack: 10, defense: 10, health: 4, level: 1, speed: 8, heroId: 'pikachu-id', effects, moveSet: sampleMoveSet },
-        'donkey-kong-id': { name: 'donkey kong', attack: 15, defense: 10, health: 4, level: 1, speed: 8, heroId: 'donkey-kong-id', effects, moveSet: sampleMoveSet }
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
+        'pikachu-id': { name: 'pikachu', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 8, heroId: 'pikachu-id', effects, moveSet: sampleMoveSet },
+        'donkey-kong-id': { name: 'donkey kong', attack: 15, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 8, heroId: 'donkey-kong-id', effects, moveSet: sampleMoveSet }
       }
       const enemyTeam = {
-        'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 4, level: 1, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
-        'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 4, level: 1, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
-        'ridley-id': { name: 'ridley', attack: 10, defense: 10, health: 4, level: 1, speed: 4, heroId: 'ridley-id', effects, moveSet: sampleMoveSet },
-        'krool-id': { name: 'king k rool', attack: 10, defense: 10, health: 4, level: 1, speed: 4, heroId: 'ridley-id', effects, moveSet: sampleMoveSet }
+        'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
+        'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
+        'ridley-id': { name: 'ridley', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 4, heroId: 'ridley-id', effects, moveSet: sampleMoveSet },
+        'krool-id': { name: 'king k rool', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 4, heroId: 'ridley-id', effects, moveSet: sampleMoveSet }
       }
       configClone.playerTeam = playerTeam;
       configClone.enemyTeam = enemyTeam;
@@ -369,8 +369,8 @@ describe('BattleManager', () => {
         message: 'pikachu, donkey kong switched out!',
         result: {
           side: 'player',
-          oldActiveHeroTeam: [playerTeam['mario-id'], playerTeam['link-id']],
-          newActiveHeroTeam: [playerTeam['pikachu-id'], playerTeam['donkey-kong-id']]
+          oldActiveHeroTeam: [{ ...playerTeam['mario-id'], maxHealth: 4 }, { ...playerTeam['link-id'], maxHealth: 4 }],
+          newActiveHeroTeam: [{ ...playerTeam['pikachu-id'], maxHealth: 4 }, { ...playerTeam['donkey-kong-id'], maxHealth: 4 }]
         }
       }]
       expect(actionLog).to.deep.equal(multiSwitchActionLog);
@@ -380,21 +380,21 @@ describe('BattleManager', () => {
     it('correctly handles CPU switch out logic', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
-        { name: 'Move1', power: 10, priority: 0 },
-        { name: 'Move2', power: 10, priority: 0 }
+        { name: 'Move1', power: 10, priority: 0, healAmt: 0, isHeal: false },
+        { name: 'Move2', power: 10, priority: 0, healAmt: 0, isHeal: false }
       ]
       const effects : LooseObject[] = [];
       const playerTeam = {
-        'mario-id': { name: 'mario', attack: 1000, defense: 10, health: 4, level: 1, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
-        'link-id': { name: 'link', attack: 1000, defense: 10, health: 4, level: 1, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
-        'pikachu-id': { name: 'pikachu', attack: 1000, defense: 10, health: 4, level: 1, speed: 8, heroId: 'pikachu-id', effects, moveSet: sampleMoveSet },
-        'donkey-kong-id': { name: 'donkey kong', attack: 1000, defense: 10, health: 4, level: 1, speed: 8, heroId: 'donkey-kong-id', effects, moveSet: sampleMoveSet }
+        'mario-id': { name: 'mario', attack: 1000, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 1000, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
+        'pikachu-id': { name: 'pikachu', attack: 1000, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 8, heroId: 'pikachu-id', effects, moveSet: sampleMoveSet },
+        'donkey-kong-id': { name: 'donkey kong', attack: 1000, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 8, heroId: 'donkey-kong-id', effects, moveSet: sampleMoveSet }
       }
       const enemyTeam = {
-        'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 4, level: 1, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
-        'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 4, level: 1, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
-        'ridley-id': { name: 'ridley', attack: 10, defense: 10, health: 4, level: 1, speed: 4, heroId: 'ridley-id', effects, moveSet: sampleMoveSet },
-        'krool-id': { name: 'king k rool', attack: 10, defense: 10, health: 4, level: 1, speed: 4, heroId: 'ridley-id', effects, moveSet: sampleMoveSet }
+        'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
+        'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
+        'ridley-id': { name: 'ridley', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 4, heroId: 'ridley-id', effects, moveSet: sampleMoveSet },
+        'krool-id': { name: 'king k rool', attack: 10, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 4, heroId: 'ridley-id', effects, moveSet: sampleMoveSet }
       }
       configClone.playerTeam = playerTeam;
       configClone.enemyTeam = enemyTeam;
@@ -636,6 +636,53 @@ describe('BattleManager', () => {
       const actionLog4 = battleManager.doPlayerTurn(marioAttackTurn);
       const effectsLog4 = actionLog4.filter((a : LooseObject) => a.type === 'Effect');
       expect(effectsLog4.length).to.equal(0);
+    })
+    it('processes healing moves', () => {
+      const configClone = cloneObject(sampleConfig);
+      const sampleMoveSet : LooseObject[] = [
+        { name: 'Move1', power: 10, priority: 0 },
+        { name: 'Heal', healAmt: 0.25, priority: 0, isHeal: true }
+      ]
+      const effects : LooseObject[] = [];
+      const activePlayerTeam = {
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
+      }
+      const activeEnemyTeam = {
+        'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
+        'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
+      }
+      configClone.playerTeam = activePlayerTeam;
+      configClone.enemyTeam = activeEnemyTeam;
+      configClone.activePlayerTeam = ['mario-id', 'link-id'];
+      configClone.activeEnemyTeam = ['bowser-id', 'ganondorf-id'];
+      configClone.multiMode = true;
+      const battleManager : BattleManager = new BattleManager(configClone);
+
+      const actionLog = battleManager.doPlayerTurnMulti([{
+        actionType: 'ActionTurn',
+        move: sampleMoveSet[1],
+        sourceHeroId: 'mario-id',
+        targetHeroIds: ['link-id'],
+        priority: sampleMoveSet[0].priority
+      }, {
+        actionType: 'ActionTurn',
+        move: sampleMoveSet[1],
+        sourceHeroId: 'link-id',
+        targetHeroIds: ['mario-id'],
+        priority: sampleMoveSet[1].priority
+      }]);
+
+      expect(actionLog[0]).to.deep.equal({
+        type: 'Action',
+        message: 'mario used Heal and healed 0 to link',
+        result: {
+          healAmt: 0,
+          sourceHeroId: 'mario-id',
+          targetHeroId: 'link-id',
+          move: 'Heal'
+        }
+      })
     })
   })
 })
