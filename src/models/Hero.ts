@@ -12,9 +12,11 @@ export class Hero {
   private defense : number = 0;
   private speed: number = 0;
   private health : number = 0;
+  private maxHealth : number = 0;
   private level : number = 1;
   private effects : IAbstractTurn[] = [];
   private moveSet : Move[] = [];
+  private additionalStats : LooseObject;
 
   constructor(config : LooseObject) {
     if (config.name) this.name = config.name;
@@ -23,9 +25,28 @@ export class Hero {
     if (config.defense) this.defense = config.defense;
     if (config.level) this.level = config.level;
     if (config.speed) this.speed = config.speed;
-    if (config.health) this.health = config.health;
+    if (config.health) {
+      this.health = config.health;
+      this.maxHealth = config.health;
+    }
     if (config.effects) this.effects = config.effects.map((effect : LooseObject) => new EffectTurn(effect));
     if (config.moveSet) this.moveSet = config.moveSet.map((move : LooseObject) => new Move(move));
+
+    const regKeys = ['name', 'heroId', 'attack', 'defense', 'level', 'speed', 'health', 'effects', 'moveSet', 'maxHealth']
+    Object.keys(config).forEach((key : string) => {
+      if (!regKeys.includes(key)) {
+        if (!this.additionalStats) this.additionalStats = {}
+        this.additionalStats[key] = config[key]
+      }
+    })
+  }
+
+  public getAdditionalStats() : LooseObject {
+    return this.additionalStats
+  }
+
+  public setAdditionalStats(additionalStats : LooseObject) : void {
+    this.additionalStats = additionalStats
   }
 
   public getName() : string {
@@ -50,6 +71,14 @@ export class Hero {
 
   public setDefense(defense : number) {
     this.defense = defense;
+  }
+
+  public getMaxHealth() : number {
+    return this.maxHealth;
+  }
+
+  public setMaxHealth(maxHealth : number) {
+    this.maxHealth = maxHealth
   }
 
   public getHealth() : number {

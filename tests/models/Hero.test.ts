@@ -19,7 +19,7 @@ describe('Hero', () => {
       moveSet: []
     }
     const newHero = new Hero(rawObject);
-    expect(newHero).to.deep.equal(rawObject);
+    expect(newHero).to.deep.equal({ ...rawObject, maxHealth: 150 });
   })
   it('generates a default id', () => {
     const rawObject : LooseObject = { attack: 10, defense: 10 };
@@ -90,5 +90,28 @@ describe('Hero', () => {
       expect(m.getPower()).to.equal(moveSet[index].power)
       expect(m.getPriority()).to.equal(moveSet[index].priority)
     })
+  })
+
+  it('Allows custom stats', () => {
+    const heroConfig = {
+      attack: 10,
+      defense: 10,
+      health: 150,
+      speed: 10,
+      level: 55,
+      name: 'hero 1',
+      heroId: '1',
+      effects: [],
+      moveSet: [],
+      magic: 20,
+      age: 10,
+      potential: 5
+    }
+
+    const newHero : Hero = new Hero(heroConfig);
+    expect(newHero.getAdditionalStats()).to.deep.equal({ magic: 20, age: 10, potential: 5 })
+
+    newHero.setAdditionalStats({ magic: 20, age: 10, potential: 5, gender: 'male', class: 'Mage' })
+    expect(newHero.getAdditionalStats()).to.deep.equal({ magic: 20, age: 10, potential: 5, gender: 'male', class: 'Mage' })
   })
 })

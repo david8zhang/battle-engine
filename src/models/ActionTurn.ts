@@ -50,23 +50,35 @@ export class ActionTurn implements IAbstractTurn {
       return [];
     }
 
-    // Deal damage to all targets
+    // Deal damage to or heal all targets
     this.targetHeroIds.forEach((id) => {
       let targetHero : Hero
       if (playerTeam[id]) targetHero = playerTeam[id];
       if (enemyTeam[id]) targetHero = enemyTeam[id];
       if (targetHero.getHealth() > 0) {
-        const damage = this.move.calculateDamage(sourceHero, targetHero);
-        targetHero.setHealth(targetHero.getHealth() - damage);
+        let message = '';
+        let result : any = {}
+        if (this.move.getIsHeal() === true) {
+          const healAmt = this.move.calculateHealing(sourceHero, targetHero)
+          targetHero.setHealth(targetHero.getHealth() + healAmt)
+          message = `${sourceHero.getName()} used ${this.move.getName()} and healed ${healAmt} to ${targetHero.getName()}`
+          result.healAmt = healAmt
+        } else {
+          const damage = this.move.calculateDamage(sourceHero, targetHero);
+          targetHero.setHealth(targetHero.getHealth() - damage);
+          message = `${sourceHero.getName()} used ${this.move.getName()} and dealt ${damage} to ${targetHero.getName()}`
+          result.damage = damage
+        }
+        result = {
+          ...result,
+          sourceHeroId: this.sourceHeroId,
+          targetHeroId: targetHero.getHeroId(),
+          move: this.move.getName()
+        }
         actionLogs.push({
           type: 'Action',
-          message: `${sourceHero.getName()} used ${this.move.getName()} and dealt ${damage} to ${targetHero.getName()}`,
-          result: {
-            damage,
-            sourceHeroId: this.sourceHeroId,
-            targetHeroId: targetHero.getHeroId(),
-            move: this.move.getName()
-          }
+          message,
+          result
         });
         if (targetHero.getHealth() === 0) {
           actionLogs.push({
