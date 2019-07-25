@@ -685,4 +685,69 @@ describe('BattleManager', () => {
       })
     })
   })
+
+  describe('Getters and setters', () => {
+    it('Gets the active player team', () => {
+      const configClone = cloneObject(sampleConfig);
+      const sampleMoveSet : LooseObject[] = [
+        { name: 'Move1', power: 0, priority: 0, healAmt: 0, isHeal: false },
+        { name: 'Move2', power: 0, priority: 0, healAmt: 0, isHeal: false }
+      ]
+      const defaultEffects : LooseObject[] = [];
+      const effects : LooseObject[] = [];
+      const activePlayerTeam = {
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 100, maxHealth: 100, level: 1, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 100, maxHealth: 100, level: 1, speed: 8, heroId: 'link-id', effects: defaultEffects, moveSet: sampleMoveSet }
+      }
+      const activeEnemyTeam = {
+        'bowser-id': { name: 'bowser', attack: 0, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 6, heroId: 'bowser-id', effects: defaultEffects, moveSet: sampleMoveSet },
+        'ganondorf-id': { name: 'ganondorf', attack: 0, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 4, heroId: 'ganondorf-id', effects: defaultEffects, moveSet: sampleMoveSet },
+      }
+      configClone.playerTeam = activePlayerTeam;
+      configClone.enemyTeam = activeEnemyTeam;
+      configClone.activePlayerTeam = ['mario-id', 'link-id'];
+      configClone.activeEnemyTeam = ['bowser-id', 'ganondorf-id'];
+      configClone.multiMode = true;
+      const battleManager : BattleManager = new BattleManager(configClone);
+
+      expect(battleManager.getActivePlayerTeam()).to.deep.equal(Object.keys(activePlayerTeam).map((heroId : string) => activePlayerTeam[heroId]))
+      expect(battleManager.getActiveEnemyTeam()).to.deep.equal(Object.keys(activeEnemyTeam).map((heroId : string) => activeEnemyTeam[heroId]))
+    })
+
+    it('Gets the additional attributes', () => {
+      const configClone = cloneObject(sampleConfig);
+      const sampleMoveSet : LooseObject[] = [
+        { name: 'Move1', power: 0, priority: 0 },
+        { name: 'Move2', power: 0, priority: 0 }
+      ]
+      const defaultEffects : LooseObject[] = [];
+      const effects : LooseObject[] = [];
+
+      const additionalAttributes = {
+        stamina: 100,
+        gender: 'male',
+        magic: 150
+      }
+
+      const activePlayerTeam = {
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 100, maxHealth: 100, level: 1, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet, ...additionalAttributes },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 100, maxHealth: 100, level: 1, speed: 8, heroId: 'link-id', effects: defaultEffects, moveSet: sampleMoveSet, ...additionalAttributes }
+      }
+      const activeEnemyTeam = {
+        'bowser-id': { name: 'bowser', attack: 0, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 6, heroId: 'bowser-id', effects: defaultEffects, moveSet: sampleMoveSet, ...additionalAttributes },
+        'ganondorf-id': { name: 'ganondorf', attack: 0, defense: 10, health: 4, maxHealth: 4, level: 1, speed: 4, heroId: 'ganondorf-id', effects: defaultEffects, moveSet: sampleMoveSet, ...additionalAttributes },
+      }
+      configClone.playerTeam = activePlayerTeam;
+      configClone.enemyTeam = activeEnemyTeam;
+      configClone.activePlayerTeam = ['mario-id', 'link-id'];
+      configClone.activeEnemyTeam = ['bowser-id', 'ganondorf-id'];
+      configClone.multiMode = true;
+      const battleManager : BattleManager = new BattleManager(configClone);
+
+      const hero = battleManager.getActivePlayerTeam()[0]
+      expect(hero).to.haveOwnProperty('stamina')
+      expect(hero).to.haveOwnProperty('gender')
+      expect(hero).to.haveOwnProperty('magic')
+    })
+  })
 })

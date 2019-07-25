@@ -102,7 +102,8 @@ export class BattleManager implements IBattleManager {
       maxHealth: hero.getMaxHealth(),
       heroId: hero.getHeroId(),
       effects: hero.getEffects(),
-      moveSet: this.deserializeMoves(hero.getMoveSet())
+      moveSet: this.deserializeMoves(hero.getMoveSet()),
+      ...hero.getAdditionalStats()
     }
   }
 } 
