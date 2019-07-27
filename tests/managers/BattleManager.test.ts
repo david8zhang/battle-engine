@@ -6,6 +6,8 @@ import { BattleManager } from '../../src/managers/BattleManager';
 
 import { sampleConfig } from '../../seed/battleConfig';
 import { LooseObject } from '../../src/interface/LooseObject';
+import { Hero } from '../../src/models/Hero';
+import { Move } from '../../src/models/Move';
 
 const cloneObject = (obj : LooseObject) : LooseObject => {
   return JSON.parse(JSON.stringify(obj));
@@ -684,6 +686,194 @@ describe('BattleManager', () => {
         }
       })
     })
+    describe('Passive action types', () => {
+      const configClone = cloneObject(sampleConfig);
+      const sampleMoveSet : LooseObject[] = [
+        {
+          name: 'Poison Effect',
+          power: 0,
+          priority: 1,
+          target: 'enemies',
+          isHeal: false,
+          healAmt: 0,
+          staminaCost: 20,
+          effects: [
+            {
+              name: 'Poison Effect',
+              duration: 4,
+              target: 'enemies',
+              type: 'damage',
+              dmgPercent: 0.05
+            }
+          ]
+        },
+        {
+          name: 'Heal Effect',
+          power: 0,
+          priority: 1,
+          target: 'ally',
+          isHeal: false,
+          healAmt: 0,
+          staminaCost: 20,
+          effects: [
+            {
+              name: 'Heal Effect',
+              duration: 4,
+              target: 'ally',
+              type: 'heal',
+              healPercent: 0.05
+            }
+          ]
+        },
+        {
+          name: 'Hone Skill',
+          power: 0,
+          priority: 1,
+          target: 'ally',
+          isHeal: false,
+          healAmt: 0,
+          staminaCost: 20,
+          effects: [
+            {
+              name: 'Attack Boost',
+              duration: -1,
+              target: 'ally',
+              type: 'buff',
+              stat: 'attack',
+              buffPercent: 1.5
+            }
+          ]
+        },
+        {
+          name: 'Terrify',
+          power: 0,
+          priority: 1,
+          target: 'enemy',
+          isHeal: false,
+          healAmt: 0,
+          staminaCost: 20,
+          effects: [
+            {
+              name: 'Attack Debuff',
+              duration: -1,
+              target: 'ally',
+              type: 'debuff',
+              stat: 'attack',
+              debuffPercent: 0.75
+            }
+          ]
+        }
+      ]
+      const effects : LooseObject[] = [];
+      const activePlayerTeam = {
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
+      }
+      const activeEnemyTeam = {
+        'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
+        'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
+      }
+      configClone.playerTeam = activePlayerTeam;
+      configClone.enemyTeam = activeEnemyTeam;
+      configClone.activePlayerTeam = ['mario-id', 'link-id'];
+      configClone.activeEnemyTeam = ['bowser-id', 'ganondorf-id'];
+      configClone.multiMode = true;
+      
+      it('processes moves with effects', () => {
+        const battleManager : BattleManager = new BattleManager(configClone);
+        const actionLog = battleManager.doPlayerTurnMulti([{
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[0],
+          sourceHeroId: 'mario-id',
+          targetHeroIds: ['bowser-id', 'ganondorf-id'],
+          priority: sampleMoveSet[0].priority
+        }, {
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[1],
+          sourceHeroId: 'link-id',
+          targetHeroIds: ['mario-id'],
+          priority: sampleMoveSet[1].priority
+        }])
+  
+        const messages = actionLog.map((action : LooseObject) => action.message)
+        expect(messages).to.deep.equal([
+          'mario used Poison Effect',
+          'bowser took 1 damage from Poison Effect',
+          'ganondorf took 1 damage from Poison Effect',
+          'link used Heal Effect',
+          'mario is already at full health!',
+          'bowser used Poison Effect',
+          'mario took 1 damage from Poison Effect',
+          'link took 1 damage from Poison Effect',
+          'ganondorf used Poison Effect',
+          'mario took 1 damage from Poison Effect',
+          'link took 1 damage from Poison Effect'
+        ])
+  
+        const playerTeam = battleManager.getPlayerTeam();
+        const enemyTeam = battleManager.getEnemyTeam();
+        const mario = playerTeam[0];
+        const link = playerTeam[1];
+  
+        const bowser = enemyTeam[0];
+        const ganondorf = enemyTeam[1]
+  
+        expect(mario.effects.length).to.equal(2);
+        expect(link.effects.length).to.equal(1);
+        expect(bowser.effects.length).to.equal(1);
+        expect(ganondorf.effects.length).to.equal(1);
+  
+        expect(mario.health).to.equal(2);
+        expect(link.health).to.equal(2);
+        expect(bowser.health).to.equal(3);
+        expect(ganondorf.health).to.equal(3);
+      })
+
+      it('processes targeted effects', () => {
+        const battleManager : BattleManager = new BattleManager(configClone);
+        const actionLog = battleManager.doPlayerTurnMulti([{
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[2],
+          sourceHeroId: 'mario-id',
+          targetHeroIds: ['link-id'],
+          priority: sampleMoveSet[2].priority
+        }, {
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[3],
+          sourceHeroId: 'link-id',
+          targetHeroIds: ['bowser-id'],
+          priority: sampleMoveSet[3].priority
+        }])
+
+        const messages = actionLog.map((action : LooseObject) => action.message)
+        expect(messages).to.deep.equal([
+          'mario used Hone Skill',
+          "link's attack rose!",
+          'link used Terrify',
+          "bowser's attack fell!",
+          'bowser used Poison Effect',
+          'mario took 1 damage from Poison Effect',
+          'link took 1 damage from Poison Effect',
+          'ganondorf used Poison Effect',
+          'mario took 1 damage from Poison Effect',
+          'link took 1 damage from Poison Effect'
+        ])
+
+        const playerTeam = battleManager.getPlayerTeam();
+        const enemyTeam = battleManager.getEnemyTeam();
+
+        const mario = playerTeam[0];
+        const link = playerTeam[1];
+        const bowser = enemyTeam[0];
+        const ganondorf = enemyTeam[1]
+
+        expect(bowser.effects.length).to.equal(0);
+        expect(ganondorf.effects.length).to.equal(0);
+
+        expect(link.attack).to.equal(15);
+        expect(bowser.attack).to.equal(7);
+      })
+    })
   })
 
   describe('Getters and setters', () => {
@@ -717,8 +907,8 @@ describe('BattleManager', () => {
     it('Gets the additional attributes', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
-        { name: 'Move1', power: 0, priority: 0 },
-        { name: 'Move2', power: 0, priority: 0 }
+        { name: 'Move1', power: 0, priority: 0, isHeal: false, healAmt: 0 },
+        { name: 'Move2', power: 0, priority: 0, isHeal: false, healAmt: 0 }
       ]
       const defaultEffects : LooseObject[] = [];
       const effects : LooseObject[] = [];
@@ -748,6 +938,69 @@ describe('BattleManager', () => {
       expect(hero).to.haveOwnProperty('stamina')
       expect(hero).to.haveOwnProperty('gender')
       expect(hero).to.haveOwnProperty('magic')
+    })
+
+    it('Correctly deserializes heroes', () => {
+      const heroConfig = {
+        name: 'mario',
+        attack: 10,
+        defense: 10,
+        health: 100,
+        maxHealth: 100,
+        level: 1,
+        speed: 10,
+        heroId: 'mario-id',
+        effects: [],
+        moveSet: [],
+        magic: 10,
+        stamina: 200,
+        gender: 'male',
+        age: 20
+      }
+      const hero = new Hero(heroConfig)
+      expect(BattleManager.deserializeHero(hero)).to.deep.equal(heroConfig)
+    })
+
+    it('Correctly deserializes moves', () => {
+      const moveConfig = {
+        name: 'Move1',
+        power: 10,
+        priority: 0,
+        healAmt: 0,
+        isHeal: false,
+        target: 'enemies',
+        staminaCost: 200
+      }
+
+      const move = new Move(moveConfig);
+      expect(BattleManager.deserializeMoves([move])).to.deep.equal([moveConfig])
+    })
+
+    it('Correctly deserializes heroes with moveSets', () => {
+      const moveSet = [{
+        name: 'Move1',
+        power: 10,
+        priority: 0,
+        healAmt: 0,
+        isHeal: false,
+        target: 'enemies',
+        staminaCost: 200
+      }]
+      const heroConfig = {
+        name: 'mario',
+        attack: 10,
+        defense: 10,
+        health: 100,
+        maxHealth: 100,
+        level: 1,
+        speed: 10,
+        heroId: 'mario-id',
+        effects: [],
+        moveSet
+      }
+
+      const hero = new Hero(heroConfig)
+      expect(BattleManager.deserializeHero(hero)).to.deep.equal(heroConfig)
     })
   })
 })

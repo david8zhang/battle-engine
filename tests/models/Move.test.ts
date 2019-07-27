@@ -60,4 +60,19 @@ describe('Move', () => {
     const healAmt = move.calculateHealing(sourceHero, targetHero);
     expect(healAmt).to.equal(1)
   })
+
+  it('Gets additional stats if they exist', () => {
+    const moveConfig = {
+      power: 0,
+      name: 'Healing Light',
+      priority: 0,
+      isHeal: false,
+      healAmt: 0.5,
+      magic: 10,
+      staminaCost: 200
+    }
+    const move = new Move(moveConfig)
+    const additionalStats = move.getAdditionalStats();
+    expect(additionalStats).to.deep.equal({ magic: 10, staminaCost: 200 })
+  })
 })

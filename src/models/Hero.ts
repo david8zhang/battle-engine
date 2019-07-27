@@ -15,6 +15,7 @@ export class Hero {
   private maxHealth : number = 0;
   private level : number = 1;
   private effects : IAbstractTurn[] = [];
+  private effectMapping : LooseObject;
   private moveSet : Move[] = [];
   private additionalStats : LooseObject;
 
@@ -129,8 +130,20 @@ export class Hero {
     this.moveSet = newMoveSet;
   }
 
-  public setEffects(effects : IAbstractTurn[]) {
+  public setEffects(effects : IAbstractTurn[]) : void {
     this.effects = effects;
+  }
+
+  public addEffect(effect : IAbstractTurn, effectName : string) : void {
+    if (!this.effectMapping) {
+      this.effectMapping = {}
+    }
+    this.effects.push(effect)
+    this.effectMapping[effectName] = effect
+  }
+
+  public checkDuplicateEffect(effectName : string) : boolean {
+    return this.effectMapping ? this.effectMapping[effectName] !== undefined : false;
   }
 
   public generateHeroObject(rawObject : LooseObject) : void {

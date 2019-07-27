@@ -35,6 +35,8 @@ export class EffectTurn implements IAbstractTurn {
     );
   }
 
+  public setEffect(effect : Function) { this.effect = effect }
+
   public processTurn(teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : LooseObject[] {
     const targets : Hero[] = [];
 
@@ -48,7 +50,6 @@ export class EffectTurn implements IAbstractTurn {
     const affectedTargetIds = targets.map((hero : Hero) => hero.getHeroId());
     this.duration = this.duration - 1;
     const effectLog = this.effect(targets, arenaManager);
-
 
     // Check if any are dead
     this.targetHeroes.forEach((id : string) => {

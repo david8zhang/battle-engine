@@ -46,52 +46,57 @@ export class BattleManager implements IBattleManager {
   }
 
   public getEnemyTeam() {
-    return this.deserializeTeam(this.teamManager.getEnemyTeam());
+    return BattleManager.deserializeTeam(this.teamManager.getEnemyTeam());
   }
 
   public getPlayerTeam() {
-    return this.deserializeTeam(this.teamManager.getPlayerTeam());
+    return BattleManager.deserializeTeam(this.teamManager.getPlayerTeam());
   }
 
   public getActivePlayerTeam() {
-    return this.deserializeTeam(this.teamManager.getActivePlayerTeam());
+    return BattleManager.deserializeTeam(this.teamManager.getActivePlayerTeam());
   }
 
   public getActiveEnemyTeam() {
-    return this.deserializeTeam(this.teamManager.getActiveEnemyTeam());
+    return BattleManager.deserializeTeam(this.teamManager.getActiveEnemyTeam());
   };
 
   public getActivePlayerHero() {
-    return this.deserializeHero(this.teamManager.getActivePlayerHero());
+    return BattleManager.deserializeHero(this.teamManager.getActivePlayerHero());
   }
 
   public getActiveEnemyHero() {
-    return this.deserializeHero(this.teamManager.getActiveEnemyHero());
+    return BattleManager.deserializeHero(this.teamManager.getActiveEnemyHero());
   }
 
   /** Private methods */
-  private deserializeMoves(moves : Move[]) {
+  public static deserializeMoves(moves : Move[]) : LooseObject[] {
     return moves.map((m : Move) => {
-      return {
+      const deserializedMove : LooseObject = {
         name: m.getName(),
         power: m.getPower(),
         priority: m.getPriority(),
         healAmt: m.getHealAmt(),
-        isHeal: m.getIsHeal()
+        isHeal: m.getIsHeal(),
+        ...m.getAdditionalStats()
       }
+      if (m.getEffects()) {
+        deserializedMove.effects = m.getEffects()
+      }
+      return deserializedMove
     })
   }
 
-  private deserializeTeam(team : LooseObject) {
+  public static deserializeTeam(team : LooseObject) {
     const deserializedResult : any[] = [];
     Object.keys(team).forEach((id : string) => {
       const e : Hero = team[id];
-      deserializedResult.push(this.deserializeHero(e));
+      deserializedResult.push(BattleManager.deserializeHero(e));
     })
     return deserializedResult;
   }
 
-  private deserializeHero(hero : Hero) {
+  public static deserializeHero(hero : Hero) {
     return {
       name: hero.getName(),
       health: hero.getHealth(),

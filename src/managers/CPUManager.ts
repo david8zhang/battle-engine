@@ -14,6 +14,7 @@ export class CPUManager implements ICPUManager {
   private switchCalculator : Function;
   private multiSwitchCalculator : Function;
   private multiMoveCalculator : Function;
+  private cpuDifficulty: string = 'super easy';
 
   constructor(battleConfig : LooseObject) {
     if (battleConfig.moveCalculator) this.moveCalculator = battleConfig.moveCalculator;
@@ -22,6 +23,7 @@ export class CPUManager implements ICPUManager {
       this.multiSwitchCalculator = battleConfig.multiSwitchCalculator;
       this.multiMoveCalculator = battleConfig.multiMoveCalculator;
     }
+    if (battleConfig.cpuDifficulty) this.cpuDifficulty = battleConfig.cpuDifficulty
   }
 
   private defaultMoveCalculator(enemyHero : Hero, playerHero : Hero) : IAbstractTurn {
@@ -77,18 +79,57 @@ export class CPUManager implements ICPUManager {
       if (moveSet.length === 0) {
         console.error(`Enemy ${enemy.getName()} has no moves!`)
       } else {
-        const chosenMove : Move = moveSet[0];
-        const deserializedMove = {
-          name: chosenMove.getName(),
-          power: chosenMove.getPower()
+        let moveIndex = 0;
+        let targetHeroIds : string[] = [];
+
+        // Based on CPU Difficlty get moveIndex
+        switch (this.cpuDifficulty) {
+          case 'super easy': {
+            moveIndex = 0;
+            break;
+          }
+          case 'easy': {
+            moveIndex = Math.floor(Math.random() * moveSet.length)
+            break;
+          }
+          default:
+            break;
         }
 
-        // Choose an active player hero at random and attack it
-        const randomPlayerIndex = Math.floor(Math.random() * activePlayerTeam.length);
+        const chosenMove : Move = moveSet[moveIndex];
+        const deserializedMove : LooseObject = {
+          name: chosenMove.getName(),
+          power: chosenMove.getPower(),
+          priority: chosenMove.getPriority(),
+          healAmt: chosenMove.getHealAmt(),
+          isHeal: chosenMove.getIsHeal(),
+          effects: chosenMove.getEffects(),
+          ...chosenMove.getAdditionalStats()
+        }
+
+        switch (deserializedMove.target) {
+          case 'enemies': {
+            targetHeroIds = activePlayerTeam.map((h : Hero) => h.getHeroId())
+            break;
+          }
+          case 'allies': {
+            targetHeroIds = activeEnemyTeam.map((h : Hero) => h.getHeroId())
+            break;
+          }
+          case 'ally': {
+            const randomAllyIndex = Math.floor(Math.random() * activeEnemyTeam.length);
+            targetHeroIds = [activeEnemyTeam[randomAllyIndex].getHeroId()]
+            break;
+          }
+          default:
+            const randomPlayerIndex = Math.floor(Math.random() * activePlayerTeam.length);
+            targetHeroIds = [activePlayerTeam[randomPlayerIndex].getHeroId()]
+            break;            
+        }
         res.push(new ActionTurn({
           move: deserializedMove,
           sourceHeroId: enemy.getHeroId(),
-          targetHeroIds: [activePlayerTeam[randomPlayerIndex].getHeroId()],
+          targetHeroIds,
           priority: chosenMove.getPriority()
         }));
       }

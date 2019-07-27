@@ -8,6 +8,8 @@ export class Move {
   private isHeal : boolean = false
   private healAmt : number = 0;
   private customDamageCalculator : Function;
+  private additionalStats : LooseObject;
+  private effects : LooseObject[];
 
   constructor(config : LooseObject) {
     if (config.name) this.name = config.name;
@@ -16,6 +18,15 @@ export class Move {
     if (config.isHeal) this.isHeal = config.isHeal
     if (config.healAmt) this.healAmt = config.healAmt
     if (config.customDamageCalculator) this.customDamageCalculator = config.customDamageCalculator
+    if (config.effects) this.effects = config.effects
+
+    const defaultKeys = ['name', 'power', 'priority', 'isHeal', 'healAmt', 'customDamageCalculator', 'effects']
+    Object.keys(config).forEach((key : string) => {
+      if (!defaultKeys.includes(key)) {
+        if (!this.additionalStats) this.additionalStats = {}
+        this.additionalStats[key] = config[key]
+      }
+    })
   }
 
   public getPower() : number {
@@ -75,5 +86,16 @@ export class Move {
     let damage = ((levelModifier * this.power * attackDefenseRatio / 50) + 2)
     if (damage > targetHero.getHealth()) damage = targetHero.getHealth();
     return Math.floor(damage);
+  }
+
+  public getAdditionalStats() : LooseObject {
+    return this.additionalStats
+  }
+
+  public getEffects() : LooseObject[] {
+    return this.effects;
+  }
+  public setEffects(effects : LooseObject[]) : void {
+    this.effects = effects
   }
 }
