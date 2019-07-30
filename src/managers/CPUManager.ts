@@ -97,6 +97,7 @@ export class CPUManager implements ICPUManager {
         }
 
         const chosenMove : Move = moveSet[moveIndex];
+
         const deserializedMove : LooseObject = {
           name: chosenMove.getName(),
           power: chosenMove.getPower(),
@@ -126,6 +127,13 @@ export class CPUManager implements ICPUManager {
             targetHeroIds = [activePlayerTeam[randomPlayerIndex].getHeroId()]
             break;            
         }
+
+        if (chosenMove.getIsHeal()) {
+          const nonSelfAllies = activeEnemyTeam.filter((h : Hero) => h.getHeroId() !== enemy.getHeroId());
+          const randomAllyIndex = Math.floor(Math.random() * nonSelfAllies.length);
+          targetHeroIds = [nonSelfAllies[randomAllyIndex].getHeroId()]
+        }
+
         res.push(new ActionTurn({
           move: deserializedMove,
           sourceHeroId: enemy.getHeroId(),

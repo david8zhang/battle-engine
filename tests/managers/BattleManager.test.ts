@@ -639,7 +639,7 @@ describe('BattleManager', () => {
       const effectsLog4 = actionLog4.filter((a : LooseObject) => a.type === 'Effect');
       expect(effectsLog4.length).to.equal(0);
     })
-    it('processes healing moves', () => {
+    describe('Healing moves', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
         { name: 'Move1', power: 10, priority: 0 },
@@ -659,33 +659,78 @@ describe('BattleManager', () => {
       configClone.activePlayerTeam = ['mario-id', 'link-id'];
       configClone.activeEnemyTeam = ['bowser-id', 'ganondorf-id'];
       configClone.multiMode = true;
-      const battleManager : BattleManager = new BattleManager(configClone);
 
-      const actionLog = battleManager.doPlayerTurnMulti([{
-        actionType: 'ActionTurn',
-        move: sampleMoveSet[1],
-        sourceHeroId: 'mario-id',
-        targetHeroIds: ['link-id'],
-        priority: sampleMoveSet[0].priority
-      }, {
-        actionType: 'ActionTurn',
-        move: sampleMoveSet[1],
-        sourceHeroId: 'link-id',
-        targetHeroIds: ['mario-id'],
-        priority: sampleMoveSet[1].priority
-      }]);
-
-      expect(actionLog[0]).to.deep.equal({
-        type: 'Action',
-        message: 'mario used Heal and healed 0 to link',
-        result: {
-          healAmt: 0,
+      it('processes healing moves', () => {
+        const battleManager : BattleManager = new BattleManager(configClone);
+  
+        const actionLog = battleManager.doPlayerTurnMulti([{
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[1],
           sourceHeroId: 'mario-id',
-          targetHeroId: 'link-id',
-          move: 'Heal'
+          targetHeroIds: ['link-id'],
+          priority: sampleMoveSet[0].priority
+        }, {
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[1],
+          sourceHeroId: 'link-id',
+          targetHeroIds: ['mario-id'],
+          priority: sampleMoveSet[1].priority
+        }]);
+  
+        expect(actionLog[0]).to.deep.equal({
+          type: 'Action',
+          message: 'mario used Heal and healed 0 to link',
+          result: {
+            healAmt: 0,
+            sourceHeroId: 'mario-id',
+            targetHeroId: 'link-id',
+            move: 'Heal'
+          }
+        })
+      })
+
+      it('processes enemy healing moves', () => {
+        const enemyHealConfig = cloneObject(configClone);
+        const sampleMoveSet : LooseObject[] = [
+          { name: 'Heal', healAmt: 0.25, priority: 0, isHeal: true }
+        ];
+        const activePlayerTeam = {
+          'mario-id': { name: 'mario', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+          'link-id': { name: 'link', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
         }
+        const activeEnemyTeam = {
+          'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
+          'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 4, maxHealth: 4, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
+        }
+        enemyHealConfig.playerTeam = activePlayerTeam;
+        enemyHealConfig.enemyTeam = activeEnemyTeam;
+        enemyHealConfig.multiMode = true;
+
+        const battleManager : BattleManager = new BattleManager(enemyHealConfig);
+        const actionLog = battleManager.doPlayerTurnMulti([{
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[0],
+          sourceHeroId: 'mario-id',
+          targetHeroIds: ['link-id'],
+          priority: sampleMoveSet[0].priority
+        }, {
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[0],
+          sourceHeroId: 'link-id',
+          targetHeroIds: ['mario-id'],
+          priority: sampleMoveSet[0].priority
+        }])
+
+        const messages = actionLog.map((logItem : LooseObject) => logItem.message)
+        expect(messages).to.deep.equal([
+          'mario used Heal and healed 0 to link',
+          'link used Heal and healed 0 to mario',
+          'bowser used Heal and healed 0 to ganondorf',
+          'ganondorf used Heal and healed 0 to bowser'
+        ])
       })
     })
+
     describe('Passive action types', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
