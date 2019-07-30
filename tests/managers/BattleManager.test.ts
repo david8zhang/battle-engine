@@ -806,8 +806,8 @@ describe('BattleManager', () => {
           'mario took 1 damage from Poison Effect',
           'link took 1 damage from Poison Effect',
           'ganondorf used Poison Effect',
-          'mario took 1 damage from Poison Effect',
-          'link took 1 damage from Poison Effect'
+          'mario is already under the influence of Poison Effect!',
+          'link is already under the influence of Poison Effect!'
         ])
   
         const playerTeam = battleManager.getPlayerTeam();
@@ -823,10 +823,87 @@ describe('BattleManager', () => {
         expect(bowser.effects.length).to.equal(1);
         expect(ganondorf.effects.length).to.equal(1);
   
-        expect(mario.health).to.equal(2);
-        expect(link.health).to.equal(2);
+        expect(mario.health).to.equal(3);
+        expect(link.health).to.equal(3);
         expect(bowser.health).to.equal(3);
         expect(ganondorf.health).to.equal(3);
+      })
+
+      it('Carries over effects properly', () => {
+        const higherHealth = JSON.parse(JSON.stringify(configClone));
+
+        const effects : LooseObject[] = [];
+        const activePlayerTeam = {
+          'mario-id': { name: 'mario', attack: 10, defense: 10, health: 100, maxHealth: 100, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+          'link-id': { name: 'link', attack: 10, defense: 10, health: 100, maxHealth: 100, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
+        }
+        const activeEnemyTeam = {
+          'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 100, maxHealth: 100, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
+          'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 100, maxHealth: 100, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
+        }
+        higherHealth.playerTeam = activePlayerTeam;
+        higherHealth.enemyTeam = activeEnemyTeam;
+        higherHealth.activePlayerTeam = ['mario-id', 'link-id'];
+        higherHealth.activeEnemyTeam = ['bowser-id', 'ganondorf-id'];
+        higherHealth.multiMode = true;
+
+
+        const battleManager : BattleManager = new BattleManager(higherHealth);
+        const actionLog = battleManager.doPlayerTurnMulti([{
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[0],
+          sourceHeroId: 'mario-id',
+          targetHeroIds: ['bowser-id', 'ganondorf-id'],
+          priority: sampleMoveSet[0].priority
+        }, {
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[1],
+          sourceHeroId: 'link-id',
+          targetHeroIds: ['mario-id'],
+          priority: sampleMoveSet[1].priority
+        }])
+
+        const messages = actionLog.map((action : LooseObject) => action.message)
+
+        expect(messages).to.deep.equal([
+          'mario used Poison Effect',
+          'bowser took 5 damage from Poison Effect',
+          'ganondorf took 5 damage from Poison Effect',
+          'link used Heal Effect',
+          'mario is already at full health!',
+          'bowser used Poison Effect',
+          'mario took 5 damage from Poison Effect',
+          'link took 5 damage from Poison Effect',
+          'ganondorf used Poison Effect',
+          'mario is already under the influence of Poison Effect!',
+          'link is already under the influence of Poison Effect!'
+        ])
+
+        const actionLog2 = battleManager.doPlayerTurnMulti([{
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[0],
+          sourceHeroId: 'mario-id',
+          targetHeroIds: ['bowser-id', 'ganondorf-id'],
+          priority: sampleMoveSet[0].priority
+        }])
+
+        const messages2 = actionLog2.map((action : LooseObject) => action.message)
+        expect(messages2).to.deep.equal([
+          'mario healed 5 HP from Heal Effect',
+          'mario took 5 damage from Poison Effect',
+          'link took 5 damage from Poison Effect',
+          'bowser took 5 damage from Poison Effect',
+          'ganondorf took 5 damage from Poison Effect',
+          'mario used Poison Effect',
+          'bowser is already under the influence of Poison Effect!',
+          'ganondorf is already under the influence of Poison Effect!',
+          'bowser used Poison Effect',
+          'mario is already under the influence of Poison Effect!',
+          'link is already under the influence of Poison Effect!',
+          'ganondorf used Poison Effect',
+          'mario is already under the influence of Poison Effect!',
+          'link is already under the influence of Poison Effect!'
+        ])
       })
 
       it('processes targeted effects', () => {
@@ -855,14 +932,13 @@ describe('BattleManager', () => {
           'mario took 1 damage from Poison Effect',
           'link took 1 damage from Poison Effect',
           'ganondorf used Poison Effect',
-          'mario took 1 damage from Poison Effect',
-          'link took 1 damage from Poison Effect'
+          'mario is already under the influence of Poison Effect!',
+          'link is already under the influence of Poison Effect!'
         ])
 
         const playerTeam = battleManager.getPlayerTeam();
         const enemyTeam = battleManager.getEnemyTeam();
 
-        const mario = playerTeam[0];
         const link = playerTeam[1];
         const bowser = enemyTeam[0];
         const ganondorf = enemyTeam[1]

@@ -8,6 +8,7 @@ import { LooseObject } from "../interface/LooseObject";
 import { TurnQueue } from "../managers/TurnManager";
 import { Hero } from "./Hero";
 import { EffectTurn } from "./EffectTurn";
+import { MessageTurn } from "./MessageTurn";
 
 export class ActionTurn implements IAbstractTurn {
   private move : Move = null;
@@ -138,47 +139,75 @@ export class ActionTurn implements IAbstractTurn {
 
   public processEffects(playerTeam : LooseObject, enemyTeam : LooseObject, turnQueue : TurnQueue) : void {
     const effects = this.move.getEffects()
+    let targets = this._getTargetHeroIds()
     if (!effects) return
 
     effects.forEach((effect : LooseObject) => {
-      const effectTurn : EffectTurn = new EffectTurn({
-        duration: effect.duration,
-        name: effect.name,
-        targetHeroes: this._getTargetHeroIds(),
-        priority: 0
+      targets = targets.filter((heroId : string) => {
+        const hero : Hero = playerTeam[heroId] || enemyTeam[heroId]
+        const effects : string[] = hero.getEffects().map((effect : LooseObject) => effect.name)
+        if (effects.includes(effect.name)) {
+          turnQueue.enqueueTurn(new MessageTurn({
+            message: `${hero.getName()} is already under the influence of ${effect.name}!`,
+            priority: 0
+          }))
+          return false
+        }
+        return true
       })
-      switch (effect.type) {
-        case 'damage': {
-          effectTurn.setEffect(this._generateDamageEffect(effect))
-          turnQueue.enqueueTurn(effectTurn)
-          break;
-        }
-        case 'buff':{
-          effectTurn.setEffect(this._generateBuffOrDebuffEffect(effect))
-          turnQueue.enqueueTurn(effectTurn)
-          break;
-        }
-        case 'debuff': {
-          effectTurn.setEffect(this._generateBuffOrDebuffEffect(effect))
-          turnQueue.enqueueTurn(effectTurn)
-          break;
-        }
-        case 'heal': {
-          effectTurn.setEffect(this._generateHealEffect(effect))
-          turnQueue.enqueueTurn(effectTurn)
-          break;
-        }
-      }
 
-      // Apply effect to enemy/player heroes
-      this._getTargetHeroIds().forEach((heroId : string) => {
-        if (effectTurn.duration > 0) {
-          const hero : Hero = playerTeam[heroId] || enemyTeam[heroId]
-          if (!hero.checkDuplicateEffect(effectTurn.name)) {
-            hero.addEffect(effectTurn, effectTurn.name)
+      if (targets.length > 0) {
+        const effectTurn : EffectTurn = new EffectTurn({
+          duration: effect.duration,
+          name: effect.name,
+          targetHeroes: targets,
+          priority: 0
+        })
+        let effectFn : Function;
+        switch (effect.type) {
+          case 'damage': {
+            effectFn = this._generateDamageEffect(effect)
+            effectTurn.setEffect(effectFn)
+            turnQueue.enqueueTurn(effectTurn)
+            break;
+          }
+          case 'buff':{
+            effectFn = this._generateBuffOrDebuffEffect(effect)
+            effectTurn.setEffect(effectFn)
+            turnQueue.enqueueTurn(effectTurn)
+            break;
+          }
+          case 'debuff': {
+            effectFn = this._generateBuffOrDebuffEffect(effect)
+            effectTurn.setEffect(effectFn)
+            turnQueue.enqueueTurn(effectTurn)
+            break;
+          }
+          case 'heal': {
+            effectFn = this._generateHealEffect(effect)
+            effectTurn.setEffect(effectFn)
+            turnQueue.enqueueTurn(effectTurn)
+            break;
           }
         }
-      })
+  
+        // Apply effect to enemy/player heroes
+        this._getTargetHeroIds().forEach((heroId : string) => {
+          if (effectTurn.duration > 0) {
+            const hero : Hero = playerTeam[heroId] || enemyTeam[heroId]
+            const singleTargetEffect = new EffectTurn({
+              duration: effect.duration,
+              name: effect.name,
+              targetHeroes: [heroId],
+              effect: effectFn,
+              priority: 0
+            })
+            if (!hero.checkDuplicateEffect(singleTargetEffect.name)) {
+              hero.addEffect(singleTargetEffect, singleTargetEffect.name)
+            }
+          }
+        })
+      }
     })
   }
 

@@ -9,6 +9,7 @@ import { EffectTurn } from '../models/EffectTurn';
 import { ActionTurn } from '../models/ActionTurn';
 import { SwitchTurn } from '../models/SwitchTurn';
 import { MultiSwitchTurn } from '../models/MultiSwitchTurn';
+import { MessageTurn } from '../models/MessageTurn';
 import { ICPUManager } from "../interface/ICPUManager";
 import { Hero } from "../models/Hero";
 
@@ -16,7 +17,8 @@ const TurnFactory : LooseObject = {
   ActionTurn,
   EffectTurn,
   SwitchTurn,
-  MultiSwitchTurn
+  MultiSwitchTurn,
+  MessageTurn
 }
 
 export class TurnQueue {
