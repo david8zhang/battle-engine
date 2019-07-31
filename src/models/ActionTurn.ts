@@ -231,9 +231,11 @@ export class ActionTurn implements IAbstractTurn {
     // If the move has no active attacking or healing power, it's safe to assume it's a passive effect move
     if (this.move.getPower() === 0 && this.move.getHealAmt() === 0) {
       return [{
-        type: 'Action',
+        type: 'Effect',
         message: `${sourceHero.getName()} used ${this.move.getName()}`,
-        sourceHeroId: this.sourceHeroId,
+        result: {
+          sourceHeroId: sourceHero.getHeroId()
+        },
         move: this.move.getName()
       }];
     }
