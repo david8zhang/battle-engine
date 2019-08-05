@@ -87,13 +87,15 @@ export class TurnManager implements ITurnManager {
   private cpuManager : ICPUManager;
   private turnQueue : TurnQueue;
   private multiMode : boolean;
+  private intermediateSnapshots : boolean;
 
-  constructor(teamManager : ITeamManager, arenaManager : IArenaManager, cpuManager : ICPUManager, multiMode : boolean = false) {
+  constructor(teamManager : ITeamManager, arenaManager : IArenaManager, cpuManager : ICPUManager, multiMode : boolean = false, interSnap = false) {
     this.teamManager = teamManager;
     this.arenaManager = arenaManager;
     this.cpuManager = cpuManager;
     this.turnQueue = new TurnQueue(teamManager);
     this.multiMode = multiMode;
+    this.intermediateSnapshots = interSnap;
   }
 
   /**
@@ -113,7 +115,22 @@ export class TurnManager implements ITurnManager {
     let actionLog : LooseObject[] = [];
     while (this.turnQueue.size() > 0) {
       const turnToProcess = this.turnQueue.dequeueTurn();
-      const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
+      let actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
+
+      if (this.intermediateSnapshots) {
+        const playerTeam = JSON.parse(JSON.stringify(this.teamManager.getActivePlayerTeam()));
+        const enemyTeam = JSON.parse(JSON.stringify(this.teamManager.getActiveEnemyTeam()));
+        actions = actions.map((a : LooseObject) => {
+          return {
+            ...a,
+            snapshot: {
+              playerTeam,
+              enemyTeam
+            }
+          }
+        })
+      }
+
       actionLog = actionLog.concat(actions);
 
       if (this.checkWinCondition(actionLog)) {

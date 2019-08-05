@@ -20,13 +20,15 @@ export class BattleManager implements IBattleManager {
   private turnManager : ITurnManager;
   private cpuManager : ICPUManager;
   private multiMode : boolean;
+  private intermediateSnapshots : boolean;
 
   constructor(battleConfig : LooseObject) {
     this.teamManager = new TeamManager(battleConfig);
     this.arenaManager = new ArenaManager(battleConfig);
     this.cpuManager = new CPUManager(battleConfig);
     this.multiMode = battleConfig.multiMode ? battleConfig.multiMode : false;
-    this.turnManager = new TurnManager(this.teamManager, this.arenaManager, this.cpuManager, this.multiMode);
+    this.intermediateSnapshots = battleConfig.interSnaps !== undefined ? battleConfig.interSnaps : false;
+    this.turnManager = new TurnManager(this.teamManager, this.arenaManager, this.cpuManager, this.multiMode, this.intermediateSnapshots);
   }
 
   public doPlayerTurn(playerInput : LooseObject) : LooseObject[] {
