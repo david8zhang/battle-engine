@@ -556,8 +556,8 @@ describe('BattleManager', () => {
     it('processes effects over a duration', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
-        { name: 'Move1', power: 0, priority: 0 },
-        { name: 'Move2', power: 0, priority: 0 }
+        { name: 'Move1', power: 10, priority: 0 },
+        { name: 'Move2', power: 10, priority: 0 }
       ]
       const defaultEffects : LooseObject[] = [];
       const effects : LooseObject[] = [{
@@ -584,8 +584,8 @@ describe('BattleManager', () => {
         }
       }];
       const activePlayerTeam = {
-        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 100, level: 1, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
-        'link-id': { name: 'link', attack: 10, defense: 10, health: 100, level: 1, speed: 8, heroId: 'link-id', effects: defaultEffects, moveSet: sampleMoveSet },
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 1000, level: 1, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 10000, level: 1, speed: 8, heroId: 'link-id', effects: defaultEffects, moveSet: sampleMoveSet },
         'donkey-kong-id': { name: 'donkey-kong', attack: 10, defense: 10, health: 4, level: 1, speed: 4, heroId: 'donkey-kong-id', effects: defaultEffects, moveSet: sampleMoveSet }
       }
       const activeEnemyTeam = {
@@ -640,7 +640,7 @@ describe('BattleManager', () => {
       expect(effectsLog4.length).to.equal(0);
     })
 
-    it.only('returns intermediate snapshots', () => {
+    it('returns intermediate snapshots', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
         { name: 'Move1', power: 10, priority: 0 },

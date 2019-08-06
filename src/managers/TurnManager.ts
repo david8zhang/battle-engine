@@ -145,8 +145,10 @@ export class TurnManager implements ITurnManager {
           break;
         }
       } else {
+        // Add a CPU Turn
         if (this.teamManager.getActiveEnemyTeam().find((h : Hero) => h.getHealth() === 0)) {
           this.addCPUTurn()
+        // If player hero dies, short circuit turn queue processing and allow the player to switch
         } else if (this.teamManager.getActivePlayerTeam().find((h : Hero) => h.getHealth() === 0)) {
           break;
         }
