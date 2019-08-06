@@ -259,14 +259,21 @@ export class ActionTurn implements IAbstractTurn {
 
     // If the move has no active attacking or healing power, it's safe to assume it's a passive effect move
     if (this.move.getPower() === 0 && this.move.getHealAmt() === 0) {
-      return [{
+      const effectAction : LooseObject = {
         type: 'Effect',
         message: `${sourceHero.getName()} used ${this.move.getName()}`,
         result: {
           sourceHeroId: sourceHero.getHeroId()
         },
         move: this.move.getName()
-      }];
+      }
+      if (this.intermediateSnapshots) {
+        effectAction.snapshot = {
+          playerTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(playerTeam))),
+          enemyTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(enemyTeam)))
+        }
+      }
+      return [];
     }
 
     // Deal damage to or heal all targets

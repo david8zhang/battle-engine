@@ -115,7 +115,23 @@ export class TurnManager implements ITurnManager {
     let actionLog : LooseObject[] = [];
     while (this.turnQueue.size() > 0) {
       const turnToProcess = this.turnQueue.dequeueTurn();
-      const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
+      let actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
+
+      if (this.intermediateSnapshots) {
+        actions = actions.map((a : LooseObject) => {
+          if (!a.snapshot) {
+            return {
+              ...a,
+              snapshot: {
+                playerTeam: JSON.parse(JSON.stringify(this.teamManager.getActivePlayerTeam())),
+                enemyTeam: JSON.parse(JSON.stringify(this.teamManager.getActiveEnemyTeam()))
+              }
+            }
+          }
+          return a;
+        })
+      }
+
       actionLog = actionLog.concat(actions);
 
       if (this.checkWinCondition(actionLog)) {

@@ -640,11 +640,106 @@ describe('BattleManager', () => {
       expect(effectsLog4.length).to.equal(0);
     })
 
-    it.only('returns intermediate snapshots', () => {
+    it('returns intermediate snapshots', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
         { name: 'Move1', power: 10, priority: 0 },
         { name: 'Move2', power: 10, priority: 0 }
+      ]
+      const effects : LooseObject[] = [];
+      const activePlayerTeam = {
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 4, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 4, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
+      }
+      const activeEnemyTeam = {
+        'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 4, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
+        'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 4, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
+      }
+
+      configClone.playerTeam = activePlayerTeam;
+      configClone.enemyTeam = activeEnemyTeam;
+      configClone.activePlayerTeam = ['mario-id', 'link-id'];
+      configClone.activeEnemyTeam = ['bowser-id', 'ganondorf-id'];
+      configClone.multiMode = true;
+      configClone.interSnaps = true;
+      const battleManager : BattleManager = new BattleManager(configClone);
+
+      const actionLog = battleManager.doPlayerTurnMulti([{
+        actionType: 'ActionTurn',
+        move: sampleMoveSet[0],
+        sourceHeroId: 'mario-id',
+        targetHeroIds: ['bowser-id'],
+        priority: sampleMoveSet[0].priority
+      }, {
+        actionType: 'ActionTurn',
+        move: sampleMoveSet[1],
+        sourceHeroId: 'link-id',
+        targetHeroIds: ['ganondorf-id'],
+        priority: sampleMoveSet[1].priority
+      }]);
+
+      actionLog.forEach((logItem : LooseObject) => {
+        expect(logItem).to.haveOwnProperty('snapshot');
+        expect(logItem.snapshot).to.haveOwnProperty('playerTeam');
+        expect(logItem.snapshot).to.haveOwnProperty('enemyTeam');
+        expect(logItem.snapshot.playerTeam).to.be.an('array');
+        expect(logItem.snapshot.enemyTeam).to.be.an('array');
+      })
+    })
+
+    it.only('returns intermediate snapshots for all passive effects', () => {
+      const configClone = cloneObject(sampleConfig);
+      const sampleMoveSet : LooseObject[] = [
+        {
+          name: 'Shield Wall',
+          power: 0,
+          healAmt: 0,
+          priority: 1,
+          staminaCost: 40,
+          target: 'allies',
+          effects: [
+            {
+              name: 'Protection',
+              duration: -1,
+              type: 'buff',
+              stat: 'defense',
+              buffPercent: 1.5,
+              target: 'allies'
+            }
+          ]
+        },
+        {
+          name: 'Hammer Smash',
+          power: 50,
+          target: 'enemy',
+          healAmt: 0,
+          priority: 1,
+          staminaCost: 40
+        },
+        {
+          name: 'Devastating Blow',
+          power: 150,
+          healAmt: 0,
+          target: 'enemy',
+          priority: 1,
+          staminaCost: 100
+        },
+        {
+          name: 'Armor Boost',
+          power: 0,
+          healAmt: 0,
+          priority: 1,
+          target: 'self',
+          staminaCost: 50,
+          effects: [{
+            name: 'Armor Up',
+            target: 'self',
+            duration: -1,
+            type: 'buff',
+            stat: 'defense',
+            buffPercent: 1.5
+          }]
+        }
       ]
       const effects : LooseObject[] = [];
       const activePlayerTeam = {
