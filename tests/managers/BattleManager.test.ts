@@ -682,6 +682,8 @@ describe('BattleManager', () => {
         expect(logItem).to.haveOwnProperty('snapshot');
         expect(logItem.snapshot).to.haveOwnProperty('playerTeam');
         expect(logItem.snapshot).to.haveOwnProperty('enemyTeam');
+        expect(logItem.snapshot.playerTeam).to.be.an('array');
+        expect(logItem.snapshot.enemyTeam).to.be.an('array');
       })
     })
 

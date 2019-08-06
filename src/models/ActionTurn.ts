@@ -11,6 +11,7 @@ import { EffectTurn } from "./EffectTurn";
 import { MessageTurn } from "./MessageTurn";
 import { ArenaManager } from "../managers/ArenaManager";
 import { TeamManager } from "../managers/TeamManager";
+import Utils from "../utils/utils";
 
 export class ActionTurn implements IAbstractTurn {
   private move : Move = null;
@@ -301,8 +302,8 @@ export class ActionTurn implements IAbstractTurn {
         }
         if (this.intermediateSnapshots) {
           newAction.snapshot = {
-            playerTeam: JSON.parse(JSON.stringify(playerTeam)),
-            enemyTeam: JSON.parse(JSON.stringify(enemyTeam))
+            playerTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(playerTeam))),
+            enemyTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(enemyTeam)))
           };
         }
         actionLogs.push(newAction)
@@ -317,8 +318,8 @@ export class ActionTurn implements IAbstractTurn {
           }
           if (this.intermediateSnapshots) {
             deathAction.snapshot = {
-              playerTeam: JSON.parse(JSON.stringify(playerTeam)),
-              enemyTeam: JSON.parse(JSON.stringify(enemyTeam))
+              playerTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(playerTeam))),
+              enemyTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(enemyTeam)))
             }
           }
           actionLogs.push(deathAction);
