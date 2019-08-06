@@ -6,6 +6,7 @@
   "types": "build/index.d.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --compilers ts:ts-node/register ./tests/**/*.ts",
+    "prepublish": "tsc",
     "build": "tsc",
     "lint": "tslint -p tsconfig.json"
   },
