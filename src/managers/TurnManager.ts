@@ -115,22 +115,7 @@ export class TurnManager implements ITurnManager {
     let actionLog : LooseObject[] = [];
     while (this.turnQueue.size() > 0) {
       const turnToProcess = this.turnQueue.dequeueTurn();
-      let actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
-
-      if (this.intermediateSnapshots) {
-        const playerTeam = JSON.parse(JSON.stringify(this.teamManager.getActivePlayerTeam()));
-        const enemyTeam = JSON.parse(JSON.stringify(this.teamManager.getActiveEnemyTeam()));
-        actions = actions.map((a : LooseObject) => {
-          return {
-            ...a,
-            snapshot: {
-              playerTeam,
-              enemyTeam
-            }
-          }
-        })
-      }
-
+      const actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
       actionLog = actionLog.concat(actions);
 
       if (this.checkWinCondition(actionLog)) {
@@ -237,7 +222,7 @@ export class TurnManager implements ITurnManager {
    */
   public addPlayerTurn(playerInput : LooseObject) {
     const actionType : string = playerInput.actionType;
-    const action : IAbstractTurn = new TurnFactory[actionType](playerInput);
+    const action : IAbstractTurn = new TurnFactory[actionType]({ ...playerInput, interSnaps: this.intermediateSnapshots });
     this.turnQueue.enqueueTurn(action);
   }
 

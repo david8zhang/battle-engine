@@ -640,7 +640,7 @@ describe('BattleManager', () => {
       expect(effectsLog4.length).to.equal(0);
     })
 
-    it('returns intermediate snapshots', () => {
+    it.only('returns intermediate snapshots', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
         { name: 'Move1', power: 10, priority: 0 },
