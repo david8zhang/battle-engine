@@ -49,7 +49,7 @@ export class EffectTurn implements IAbstractTurn {
     
     const affectedTargetIds = targets.map((hero : Hero) => hero.getHeroId());
     this.duration = this.duration - 1;
-    const effectLog = this.effect(targets, arenaManager);
+    const effectLog = this.effect(targets, arenaManager, teamManager);
 
     // Check if any are dead
     this.targetHeroes.forEach((id : string) => {

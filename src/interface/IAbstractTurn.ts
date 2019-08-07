@@ -5,5 +5,6 @@ import { LooseObject } from "./LooseObject";
 
 export interface IAbstractTurn {
   priority : number;
+  name?: string;
   processTurn (teamManager : ITeamManager, arenaManager : IArenaManager, turnQueue : TurnQueue) : LooseObject[]
 }

@@ -131,7 +131,19 @@ export class Hero {
   }
 
   public setEffects(effects : IAbstractTurn[]) : void {
-    this.effects = effects;
+    if (!this.effectMapping) {
+      this.effectMapping = {}
+    }
+
+    this.effects = [...effects];
+
+    if (effects.length > 0) {
+      effects.forEach((effect) => {
+        this.effectMapping[effect.name] = effect;
+      })
+    } else {
+      this.effectMapping = {};
+    }
   }
 
   public addEffect(effect : IAbstractTurn, effectName : string) : void {
@@ -143,7 +155,10 @@ export class Hero {
   }
 
   public checkDuplicateEffect(effectName : string) : boolean {
-    return this.effectMapping ? this.effectMapping[effectName] !== undefined : false;
+    if (this.effectMapping && this.effectMapping[effectName] && this.effectMapping[effectName].duration > 0) {
+      return true;
+    }
+    return false;
   }
 
   public generateHeroObject(rawObject : LooseObject) : void {

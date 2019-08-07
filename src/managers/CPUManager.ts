@@ -15,6 +15,7 @@ export class CPUManager implements ICPUManager {
   private multiSwitchCalculator : Function;
   private multiMoveCalculator : Function;
   private cpuDifficulty: string = 'super easy';
+  private intermediateSnapshots : boolean;
 
   constructor(battleConfig : LooseObject) {
     if (battleConfig.moveCalculator) this.moveCalculator = battleConfig.moveCalculator;
@@ -24,6 +25,7 @@ export class CPUManager implements ICPUManager {
       this.multiMoveCalculator = battleConfig.multiMoveCalculator;
     }
     if (battleConfig.cpuDifficulty) this.cpuDifficulty = battleConfig.cpuDifficulty
+    if (battleConfig.interSnaps) this.intermediateSnapshots = battleConfig.interSnaps
   }
 
   private defaultMoveCalculator(enemyHero : Hero, playerHero : Hero) : IAbstractTurn {
@@ -41,6 +43,7 @@ export class CPUManager implements ICPUManager {
       power: chosenMove.getPower()
     }
     return new ActionTurn({
+      interSnaps: this.intermediateSnapshots,
       move: deserializedMove,
       sourceHeroId: enemyHero.getHeroId(),
       targetHeroIds: [playerHero.getHeroId()],
@@ -56,6 +59,7 @@ export class CPUManager implements ICPUManager {
       }
     })
     return new SwitchTurn({
+      interSnaps: this.intermediateSnapshots,
       newActiveHero: idToSwitchTo,
       side: 'enemy'
     })
@@ -138,7 +142,8 @@ export class CPUManager implements ICPUManager {
           move: deserializedMove,
           sourceHeroId: enemy.getHeroId(),
           targetHeroIds,
-          priority: chosenMove.getPriority()
+          priority: chosenMove.getPriority(),
+          interSnaps: this.intermediateSnapshots
         }));
       }
     })
@@ -154,7 +159,7 @@ export class CPUManager implements ICPUManager {
         ctr++;
       }
     })
-    return [new MultiSwitchTurn({ newActiveTeam: newActiveEnemyTeam, side: 'enemy' })];
+    return [new MultiSwitchTurn({ newActiveTeam: newActiveEnemyTeam, side: 'enemy', interSnaps: this.intermediateSnapshots })];
   }
 
 
@@ -172,13 +177,13 @@ export class CPUManager implements ICPUManager {
     }
     if (enemyHero.getHealth() === 0) {
       if (this.switchCalculator) {
-        return new SwitchTurn(this.switchCalculator(params));
+        return new SwitchTurn({ ...this.switchCalculator(params), interSnaps: this.intermediateSnapshots });
       } else {
         return this.defaultSwitchCalculator(enemyTeam, playerTeam);
       }
     } else {
       if (this.moveCalculator) {
-        return new ActionTurn(this.moveCalculator(params));
+        return new ActionTurn({ ...this.moveCalculator(params), interSnaps: this.intermediateSnapshots });
       } else {
         return this.defaultMoveCalculator(enemyHero, playerHero);
       }
@@ -198,14 +203,14 @@ export class CPUManager implements ICPUManager {
     }
     if (activeEnemyTeam.find((h : Hero) => h.getHealth() <= 0)) {
       if (this.multiSwitchCalculator) {
-        return [new MultiSwitchTurn(this.multiSwitchCalculator(params))];
+        return [new MultiSwitchTurn({ ...this.multiSwitchCalculator(params), interSnaps: this.intermediateSnapshots })];
       } else {
         return this.defaultMultiSwitchCalculator(enemyTeam, playerTeam, activeEnemyTeam);
       }
     } else {
       if (this.multiMoveCalculator) {
         const moves : LooseObject[] = this.multiMoveCalculator(params);
-        return moves.map((config : LooseObject) => new ActionTurn(config));
+        return moves.map((config : LooseObject) => new ActionTurn({ ...config, interSnaps: this.intermediateSnapshots }));
       } else {
         return this.defaultMultiMoveCalculator(activeEnemyTeam, activePlayerTeam);
       }

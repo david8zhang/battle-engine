@@ -9,18 +9,23 @@ import { TurnQueue } from "../managers/TurnManager";
 import { Hero } from "./Hero";
 import { EffectTurn } from "./EffectTurn";
 import { MessageTurn } from "./MessageTurn";
+import { ArenaManager } from "../managers/ArenaManager";
+import { TeamManager } from "../managers/TeamManager";
+import Utils from "../utils/utils";
 
 export class ActionTurn implements IAbstractTurn {
   private move : Move = null;
   private targetHeroIds : string[] = [];
   private sourceHeroId : string = '';
   public priority : number = 0;
+  private intermediateSnapshots : boolean = false;
 
   constructor(config : LooseObject) {
     if (config.move) this.move = new Move(config.move);
     if (config.targetHeroIds) this.targetHeroIds = config.targetHeroIds;
     if (config.sourceHeroId) this.sourceHeroId = config.sourceHeroId;
     if (config.priority) this.priority = config.priority;
+    if (config.interSnaps) this.intermediateSnapshots = config.interSnaps
   }
 
   // Debugging only
@@ -39,12 +44,13 @@ export class ActionTurn implements IAbstractTurn {
   }
 
   public _generateDamageEffect(effect : LooseObject) : Function {
-    return (heroes : LooseObject[]) => {
+    return (heroes : LooseObject[], arenaManager : ArenaManager, teamManager : TeamManager) => {
       const actionLog : LooseObject[] = [];
       heroes.forEach((h : LooseObject) => {
         const damage = Math.floor(h.getMaxHealth() * effect.dmgPercent) || 1;
         h.setHealth(h.getHealth() - damage);
-        actionLog.push({
+
+        const action : LooseObject = {
           type: 'Effect',
           message:  `${h.getName()} took ${damage} damage from ${effect.name}`,
           result: {
@@ -52,14 +58,21 @@ export class ActionTurn implements IAbstractTurn {
             targetHeroId: h.getHeroId(),
             effect: effect.name
           }
-        })
+        }
+        if (this.intermediateSnapshots) {
+          action.snapshot = {
+            playerTeam: JSON.parse(JSON.stringify(teamManager.getActivePlayerTeam())),
+            enemyTeam: JSON.parse(JSON.stringify(teamManager.getActiveEnemyTeam()))
+          }
+        }
+        actionLog.push(action)
       })
       return actionLog;
     }
   }
 
   public _generateBuffOrDebuffEffect(effect : LooseObject) : Function {
-    return (heroes : LooseObject[]) : LooseObject[] => {
+    return (heroes : LooseObject[], arenaManager : ArenaManager, teamManager : TeamManager) : LooseObject[] => {
       const actionLog : LooseObject[] = [];
       heroes.forEach((h : LooseObject) => {
         switch (effect.stat) {
@@ -87,7 +100,8 @@ export class ActionTurn implements IAbstractTurn {
             })
             break;
         }
-        actionLog.push({
+
+        const newAction : LooseObject = {
           type: 'Effect',
           message:  `${h.getName()}'s ${effect.stat} ${effect.buffPercent ? 'rose!' : 'fell!'}`,
           result: {
@@ -95,14 +109,21 @@ export class ActionTurn implements IAbstractTurn {
             targetHeroId: h.getHeroId(),
             effect: effect.name
           }
-        })
+        }
+        if (this.intermediateSnapshots) {
+          newAction.snapshot = {
+            playerTeam: JSON.parse(JSON.stringify(teamManager.getActivePlayerTeam())),
+            enemyTeam: JSON.parse(JSON.stringify(teamManager.getActiveEnemyTeam()))
+          }
+        }
+        actionLog.push(newAction)
       })
       return actionLog
     }
   }
 
   public _generateHealEffect(effect : LooseObject) : Function {
-    return (heroes : LooseObject[]) : LooseObject[] => {
+    return (heroes : LooseObject[], arenaManager : ArenaManager, teamManager : TeamManager) : LooseObject[] => {
       const actionLog : LooseObject[] = [];
       heroes.forEach((hero : LooseObject) => {
         if (hero.getHealth() === hero.getMaxHealth()) {
@@ -122,7 +143,8 @@ export class ActionTurn implements IAbstractTurn {
             healAmt = hero.getMaxHealth() - hero.getHealth()
           }
           hero.setHealth(Math.min(hero.getMaxHealth(), hero.getHealth() + healAmt));
-          actionLog.push({
+
+          const action : LooseObject = {
             type: 'Effect',
             message: `${hero.getName()} healed ${healAmt} HP from ${effect.name}`,
             result: {
@@ -130,7 +152,14 @@ export class ActionTurn implements IAbstractTurn {
               targetHeroId: hero.getHeroId(),
               effect: effect.name
             }
-          })
+          }
+          if (this.intermediateSnapshots) {
+            action.snapshot = {
+              playerTeam: JSON.parse(JSON.stringify(teamManager.getActivePlayerTeam())),
+              enemyTeam: JSON.parse(JSON.stringify(teamManager.getActiveEnemyTeam()))
+            }
+          }
+          actionLog.push(action)
         }
       })
       return actionLog
@@ -230,14 +259,21 @@ export class ActionTurn implements IAbstractTurn {
 
     // If the move has no active attacking or healing power, it's safe to assume it's a passive effect move
     if (this.move.getPower() === 0 && this.move.getHealAmt() === 0) {
-      return [{
+      const effectAction : LooseObject = {
         type: 'Effect',
         message: `${sourceHero.getName()} used ${this.move.getName()}`,
         result: {
           sourceHeroId: sourceHero.getHeroId()
         },
         move: this.move.getName()
-      }];
+      }
+      if (this.intermediateSnapshots) {
+        effectAction.snapshot = {
+          playerTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(playerTeam))),
+          enemyTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(enemyTeam)))
+        }
+      }
+      return [];
     }
 
     // Deal damage to or heal all targets
@@ -265,19 +301,35 @@ export class ActionTurn implements IAbstractTurn {
           targetHeroId: targetHero.getHeroId(),
           move: this.move.getName()
         }
-        actionLogs.push({
+
+        const newAction : LooseObject = {
           type: 'Action',
           message,
           result
-        });
+        }
+        if (this.intermediateSnapshots) {
+          newAction.snapshot = {
+            playerTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(playerTeam))),
+            enemyTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(enemyTeam)))
+          };
+        }
+        actionLogs.push(newAction)
+
         if (targetHero.getHealth() === 0) {
-          actionLogs.push({
+          const deathAction : LooseObject = {
             type: 'Death',
             message: `${targetHero.getName()} died!`,
             result: {
               targetHeroId: targetHero.getHeroId()
             }
-          });
+          }
+          if (this.intermediateSnapshots) {
+            deathAction.snapshot = {
+              playerTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(playerTeam))),
+              enemyTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(enemyTeam)))
+            }
+          }
+          actionLogs.push(deathAction);
         }
       }
     })
