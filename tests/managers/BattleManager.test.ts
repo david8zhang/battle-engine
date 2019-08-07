@@ -687,7 +687,7 @@ describe('BattleManager', () => {
       })
     })
 
-    it.only('returns intermediate snapshots for all passive effects', () => {
+    it('returns intermediate snapshots for all passive effects', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
         {

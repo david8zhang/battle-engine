@@ -273,7 +273,7 @@ export class ActionTurn implements IAbstractTurn {
           enemyTeam: JSON.parse(JSON.stringify(Utils.convertObjectToArray(enemyTeam)))
         }
       }
-      return [];
+      return [effectAction];
     }
 
     // Deal damage to or heal all targets
