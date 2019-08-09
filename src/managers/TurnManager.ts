@@ -88,14 +88,16 @@ export class TurnManager implements ITurnManager {
   private turnQueue : TurnQueue;
   private multiMode : boolean;
   private intermediateSnapshots : boolean;
+  private customDamageCalculator : Function;
 
-  constructor(teamManager : ITeamManager, arenaManager : IArenaManager, cpuManager : ICPUManager, multiMode : boolean = false, interSnap = false) {
+  constructor(teamManager : ITeamManager, arenaManager : IArenaManager, cpuManager : ICPUManager, multiMode : boolean = false, interSnap = false, customDamageCalculator = null) {
     this.teamManager = teamManager;
     this.arenaManager = arenaManager;
     this.cpuManager = cpuManager;
     this.turnQueue = new TurnQueue(teamManager);
     this.multiMode = multiMode;
     this.intermediateSnapshots = interSnap;
+    this.customDamageCalculator = customDamageCalculator
   }
 
   /**
@@ -115,7 +117,7 @@ export class TurnManager implements ITurnManager {
     let actionLog : LooseObject[] = [];
     while (this.turnQueue.size() > 0) {
       const turnToProcess = this.turnQueue.dequeueTurn();
-      let actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue);
+      let actions = turnToProcess.processTurn(this.teamManager, this.arenaManager, this.turnQueue, this.customDamageCalculator);
 
       if (this.intermediateSnapshots) {
         actions = actions.map((a : LooseObject) => {

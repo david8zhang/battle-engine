@@ -21,6 +21,7 @@ export class BattleManager implements IBattleManager {
   private cpuManager : ICPUManager;
   private multiMode : boolean;
   private intermediateSnapshots : boolean;
+  private customDamageCalculator : Function;
 
   constructor(battleConfig : LooseObject) {
     this.teamManager = new TeamManager(battleConfig);
@@ -28,7 +29,8 @@ export class BattleManager implements IBattleManager {
     this.cpuManager = new CPUManager(battleConfig);
     this.multiMode = battleConfig.multiMode ? battleConfig.multiMode : false;
     this.intermediateSnapshots = battleConfig.interSnaps !== undefined ? battleConfig.interSnaps : false;
-    this.turnManager = new TurnManager(this.teamManager, this.arenaManager, this.cpuManager, this.multiMode, this.intermediateSnapshots);
+    this.customDamageCalculator = battleConfig.customDamageCalculator !== undefined ? battleConfig.customDamageCalculator : null;
+    this.turnManager = new TurnManager(this.teamManager, this.arenaManager, this.cpuManager, this.multiMode, this.intermediateSnapshots, this.customDamageCalculator);
   }
 
   public doPlayerTurn(playerInput : LooseObject) : LooseObject[] {
