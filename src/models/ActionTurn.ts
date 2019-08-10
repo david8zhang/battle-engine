@@ -290,7 +290,8 @@ export class ActionTurn implements IAbstractTurn {
           message = `${sourceHero.getName()} used ${this.move.getName()} and healed ${healAmt} to ${targetHero.getName()}`
           result.healAmt = healAmt
         } else {
-          const damage = customDmgCalc ? customDmgCalc(sourceHero, targetHero, this.move) : this.move.calculateDamage(sourceHero, targetHero);
+          let damage = customDmgCalc ? customDmgCalc(sourceHero, targetHero, this.move) : this.move.calculateDamage(sourceHero, targetHero);
+          if (damage > targetHero.getHealth()) damage = targetHero.getHealth();
           targetHero.setHealth(targetHero.getHealth() - damage);
           message = `${sourceHero.getName()} used ${this.move.getName()} and dealt ${damage} to ${targetHero.getName()}`
           result.damage = damage
