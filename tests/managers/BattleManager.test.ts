@@ -782,6 +782,80 @@ describe('BattleManager', () => {
       })
     })
 
+    describe('Custom damage calculation function', () => {
+      const configClone = cloneObject(sampleConfig);
+      const sampleMoveSet : LooseObject[] = [
+        { name: 'Move1', power: 10, priority: 0 },
+        { name: 'Move2', power: 20, priority: 0 }
+      ]
+      const effects : LooseObject[] = [];
+      const activePlayerTeam = {
+        'mario-id': { name: 'mario', attack: 10, defense: 10, health: 200, maxHealth: 200, speed: 10, heroId: 'mario-id', effects, moveSet: sampleMoveSet },
+        'link-id': { name: 'link', attack: 10, defense: 10, health: 200, maxHealth: 200, speed: 8, heroId: 'link-id', effects, moveSet: sampleMoveSet },
+      }
+      const activeEnemyTeam = {
+        'bowser-id': { name: 'bowser', attack: 10, defense: 10, health: 200, maxHealth: 200, speed: 6, heroId: 'bowser-id', effects, moveSet: sampleMoveSet },
+        'ganondorf-id': { name: 'ganondorf', attack: 10, defense: 10, health: 200, maxHealth: 200, speed: 4, heroId: 'ganondorf-id', effects, moveSet: sampleMoveSet },
+      }
+      configClone.playerTeam = activePlayerTeam;
+      configClone.enemyTeam = activeEnemyTeam;
+      configClone.activePlayerTeam = ['mario-id', 'link-id'];
+      configClone.activeEnemyTeam = ['bowser-id', 'ganondorf-id'];
+      configClone.multiMode = true;
+
+      it('Works in the simple case', () => {
+        configClone.customDamageCalculator = (sourceHero, targetHero, move) => {
+          return 10;
+        }  
+        const battleManager = new BattleManager(configClone);
+        const actionLog = battleManager.doPlayerTurnMulti([{
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[0],
+          sourceHeroId: 'mario-id',
+          targetHeroIds: ['bowser-id'],
+          priority: sampleMoveSet[0].priority
+        }, {
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[1],
+          sourceHeroId: 'link-id',
+          targetHeroIds: ['ganondorf-id'],
+          priority: sampleMoveSet[1].priority
+        }]);
+  
+        actionLog.forEach((logItem : LooseObject) => {
+          expect(logItem.result.damage).to.equal(10);
+        })
+      })
+
+      it('Utilizes source, action, move', () => {
+        configClone.customDamageCalculator = (sourceHero, targetHero, move) => {
+          const attack = sourceHero.getAttack();
+          const defense = targetHero.getDefense();
+          const power = move.getPower();
+          return ((attack * power) / (2 * defense));
+        }
+        const battleManager = new BattleManager(configClone);
+        const actionLog = battleManager.doPlayerTurnMulti([{
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[0],
+          sourceHeroId: 'mario-id',
+          targetHeroIds: ['bowser-id'],
+          priority: sampleMoveSet[0].priority
+        }, {
+          actionType: 'ActionTurn',
+          move: sampleMoveSet[1],
+          sourceHeroId: 'link-id',
+          targetHeroIds: ['ganondorf-id'],
+          priority: sampleMoveSet[1].priority
+        }])
+
+        expect(actionLog[0].result.damage).to.equal(5);
+        expect(actionLog[1].result.damage).to.equal(10);
+        expect(actionLog[2].result.damage).to.equal(5);
+        expect(actionLog[3].result.damage).to.equal(5);
+      })
+    })
+
     describe('Healing moves', () => {
       const configClone = cloneObject(sampleConfig);
       const sampleMoveSet : LooseObject[] = [
